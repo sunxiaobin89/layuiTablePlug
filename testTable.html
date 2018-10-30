@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <title>layui在线调试</title>
+  <link rel="stylesheet" href="layui/src/css/layui.css" media="all">
+  <style>
+    body {
+      margin: 10px;
+    }
+
+    .demo-carousel {
+      height: 200px;
+      line-height: 200px;
+      text-align: center;
+    }
+
+    .laytable-flex {
+      width: 100%;
+      cursor: pointer;
+    }
+
+    .layui-none {
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<table class="layui-hide" id="demo" lay-filter="test"></table>
+
+<script type="text/html" id="barDemo">
+  <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="detail">查看</a>
+  <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+  <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+
+<script type="text/html" id="barDemo2">
+  <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="setVIP">设置会员</a>
+  <a class="layui-btn layui-btn-xs" lay-event="email">发送邮件</a>
+  {{# if(Math.random() > 0.5) {}}
+  <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="makeFriends">添加好友</a>
+  {{# } }}
+</script>
+
+<script type="text/html" id="toolbarDemo">
+  <div class="layui-btn-container layui-inline">
+    <button class="layui-btn layui-btn-sm" lay-event="reload">重载表格</button>
+  </div>
+  <div class="layui-inline">
+    <input class="layui-input" name="id" id="demoReload" placeholder="请输入名称" autocomplete="off"
+           style="height: 30px;width: 200px;"
+           lay-title="当前这个input没有实际用在重载的条件，只是为了检验表格是否重载了，可以在里面输入内容，然后再点击重载表格试试看">
+  </div>
+
+</script>
+
+<script src="layui/src/layui.js"></script>
+<script>
+
+  layui.use(['table'], function () {
+    var $ = layui.jquery
+      , layer = layui.layer //弹层
+      , table = layui.table //表格
+
+    // 设置跟数据请求渲染相关的参数包括异步接口和data和page组件配置
+    table.dataParams = ['url', 'method', 'where', 'contentType', 'headers', 'parseData', 'request', 'response', 'data', 'initSort', 'page'/*, 'limit', 'limits'*/];
+
+    // 处理操作列
+    window.flexColumn = function (elem) {
+      elem = $(elem);
+      var elem_th = elem.parents('th');
+      var field = elem_th.data('field');
+      var widthTemp;
+      if (!elem.data('fold')) {
+        widthTemp = elem.data('minwidth');
+      } else {
+        widthTemp = elem.data('maxwidth');
+      }
+      elem.data('fold', !elem.data('fold'));
+      layui.each(tableIns.config.cols, function (index1, cols) {
+        layui.each(cols, function (index2, col) {
+          if (field === col.field || field === index2) {
+            // 修改工具列的宽度设置
+            col.width = widthTemp;
+            col.widthChange = true;
+            return true;
+          }
+        })
+      });
+      // 重新自适应
+      $(window).resize();
+    };
+
+    $(document).on('mouseenter', '#demoReload', function (event) {
+      layer.tips($(this).attr('lay-title'), this);
+    });
+
+    var fn1 = function (field) {
+      return function (data) {
+        return data[field];
+      };
+    };
+
+    //执行一个 table 实例
+    var tableIns = table.render({
+      elem: '#demo'
+      , height: 500
+      , url: 'json/data.json' //数据接口
+      , title: '用户表'
+      , page: {} //开启分页
+      , loading: true
+      , toolbar: '#toolbarDemo' //开启工具栏，此处显示默认图标，可以自定义模板，详见文档
+      , totalRow: true //开启合计行
+      , cellMinWidth: 90
+      , sortType: 'server' // 开启server排序
+      , parseData: function (res) {
+        console.log('res.data', res.data);
+        // 测试用的json数据结构已经就是table默认要的，下面只是为了做初始化选中某些记录的功能
+        // 假设一开始我就已经有了已选中的关系数据[10003, 10005, 10006],
+        var relationData = [10003, 10005, 10006];
+        layui.each(res.data, function (index, data) {
+          if (relationData.indexOf(data.id) !== -1) {
+            // table.config.checkName 这里如果不自己修改过的话默认就是'LAY_CHECKED',不建议写死是因为万一有代码修改了这个checkName那么写死就出错了
+            data[table.config.checkName] = true;
+          }
+        });
+        return {
+          code: res.code,
+          msg: res.msg,
+          count: res.count,
+          data: res.data
+        }
+      }
+      , done: function () {
+        var tableView = this.elem.next();
+        var totalRow = tableView.find('.layui-table-total');
+        var limit = this.page ? this.page.limit : this.limit;
+        layui.each(totalRow.find('td'), function (index, tdElem) {
+          tdElem = $(tdElem);
+          var text = tdElem.text();
+          if (text && !isNaN(text)) {
+            text = (parseFloat(text) / limit).toFixed(2);
+            tdElem.find('div.layui-table-cell').html(text);
+          }
+        });
+
+      }
+      , cols: [
+        [
+          {type: 'checkbox', fixed: 'left', rowspan: 2},
+          {
+            field: 'id',
+            title: 'ID',
+            width: 80,
+            sort: true,
+            fixed: 'left',
+            totalRowText: '平均：',
+            hide: true,
+            hideable: false,
+            rowspan: 2
+          },
+          {title: '基本信息', colspan: 2, align: 'center'},
+          {title: '详细信息', colspan: 6, align: 'center'},
+          {
+            fixed: 'right',
+            type: 'toolbar',
+            field: 'toolbar_function',
+            title: '<div class="laytable-flex" data-minwidth="100" data-maxwidth="240" data-fold="true" onclick="flexColumn(this)">&lt;&lt;功能&gt;&gt;</div>',
+            width: 100,
+            align: 'left',
+            toolbar: '#barDemo2',
+            rowspan: 2
+          },
+          {
+            fixed: 'right',
+            type: 'toolbar',
+            field: 'toolbar_common',
+            title: '<div class="laytable-flex" data-minwidth="80" data-maxwidth="165" data-fold="true" onclick="flexColumn(this)">&lt;&lt;操作&gt;&gt;</div>',
+            width: 80,
+            align: 'center',
+            toolbar: '#barDemo',
+            rowspan: 2
+          }
+        ]
+        , [ //表头
+          {field: 'username', title: '<span style="color: red;"></span>', hideable: false}
+          , {field: 'sex', title: '性别', width: 90, sort: true}
+          , {field: 'experience', title: '<span style="color: red;">积分</span>', width: 90, sort: true, totalRow: true}
+          , {field: 'score', title: '评分', edit: true, width: 90, sort: true, totalRow: true}
+          , {field: 'city', title: '城市', width: 150, templet: fn1('city')}
+          , {field: 'sign', title: '签名', width: 200}
+          , {field: 'classify', title: '职业', width: 100}
+          , {field: 'wealth', title: '财富', width: 135, sort: true, totalRow: true}
+
+        ]
+      ]
+    });
+
+    table.on('edit(test)', function (obj) {
+      // console.log(obj.value); //得到修改后的值
+      // console.log(obj.field); //当前编辑的字段名
+      // console.log(obj.data); //所在行的所有相关数据
+
+      var value = obj.value;
+      var field = obj.field;
+      var inputElem = $(this);
+      var tdElem = inputElem.closest('td');
+      var valueOld = inputElem.prev().text();
+      var data = {};
+      var errMsg = ''; // 错误信息
+      if (field === 'score') {
+        // 评分的条件
+        if (value < 0) {
+          errMsg = '评分不能小于0';
+        }
+      }
+
+      if (errMsg) {
+        // 如果不满足的时候
+        data[field] = valueOld;
+        layer.msg(errMsg, {time: 1000, anim: 6, shade: 0.01}, function () {
+          inputElem.blur();
+          obj.update(data);
+          tdElem.click();
+        });
+      }
+    });
+
+    //监听头工具栏事件
+    table.on('toolbar(test)', function (obj) {
+      var checkStatus = table.checkStatus(obj.config.id)
+        , data = checkStatus.data; //获取选中的数据
+      switch (obj.event) {
+        case 'add':
+          layer.msg('添加');
+          break;
+        case 'update':
+          if (data.length === 0) {
+            layer.msg('请选择一行');
+          } else if (data.length > 1) {
+            layer.msg('只能同时编辑一个');
+          } else {
+            layer.alert('编辑 [id]：' + checkStatus.data[0].id);
+          }
+          break;
+        case 'delete':
+          if (data.length === 0) {
+            layer.msg('请选择一行');
+          } else {
+            layer.msg('删除');
+          }
+          break;
+        case 'reload':
+          // !!!!重要!!!!
+          // 目前就限定一种，建议实际使用中也是根据自己的理解选择一种形式，不要再说给table添加一个配置项，
+          // 然后可以根据这个配置项设置的是哪一种形式，同样的写法可以有不同的效果这种形式，这个无形中加大了复杂度和出错的概率，
+          // 目前默认是采用智能识别的方式，如果要换另外一种形式，可以把table.js中对应的注释放开注释另外一种形式的代码就可以了。
+          // tableIns = table.reload('demo', {url: 'json/query.json', page:{curr: 1}}, true);   // 自主选择reload模式的写法
+          tableIns = table.reload('demo', {url: 'json/query.json', page: {curr: 1}});            // 智能识别reload模式的写法
+          break;
+      }
+    });
+
+    table.on('checkbox(test)', function (obj) {
+      console.log(obj.checked); //当前是否选中状态
+      console.log(obj.data); //选中行的相关数据
+      console.log(obj.type); //如果触发的是全选，则为：all，如果触发的是单选，则为：one
+    });
+
+    table.on('sort(test)', function (obj) { //注：tool是工具条事件名，test是table原始容器的属性 lay-filter="对应的值"
+      // console.log(obj.field); //当前排序的字段名
+      // console.log(obj.type); //当前排序类型：desc（降序）、asc（升序）、null（空对象，默认排序）
+      // console.log(this); //当前排序的 th 对象
+      var config = tableIns.config;
+      if (config && config.url && config.sortType === 'server') {
+        // 为了不要做无谓的reload在sort监听里面对当前的table的config进行判断，在url模式且sortType:'server'的情况下才去reload
+        var testDateUrl = {
+          asc: 'dataAsc',
+          desc: 'dataDesc'
+        };
+        //尽管我们的 table 自带排序功能，但并没有请求服务端。
+        //有些时候，你可能需要根据当前排序的字段，重新向服务端发送请求，从而实现服务端排序，如：
+        tableIns = table.reload('demo', {
+          initSort: obj //记录初始排序，如果不设的话，将无法标记表头的排序状态。 layui 2.1.1 新增参数
+          // ,url: 'json/dataAsc.json' //这个json文件是按照数值大小排序的数据，模拟后台交易返回
+          , url: 'json/' + (obj.type ? testDateUrl[obj.type] : 'data') + '.json' //这个json文件是按照数值大小排序的数据，模拟后台交易返回
+          , where: { //请求参数（注意：这里面的参数可任意定义，并非下面固定的格式）
+            field: obj.field //排序字段
+            , order: obj.type //排序方式
+          }
+        });
+      }
+    });
+
+    //监听行工具事件
+    table.on('tool(test)', function (obj) { //注：tool 是工具条事件名，test 是 table 原始容器的属性 lay-filter="对应的值"
+      var data = obj.data //获得当前行数据
+        , layEvent = obj.event; //获得 lay-event 对应的值
+      if (layEvent === 'detail') {
+        layer.msg('查看操作');
+      } else if (layEvent === 'del') {
+        layer.confirm('真的删除行么', function (index) {
+          obj.del(); //删除对应行（tr）的DOM结构
+          layer.close(index);
+          //向服务端发送删除指令
+        });
+      } else if (layEvent === 'edit') {
+        layer.msg('编辑操作');
+      }
+    });
+  });
+</script>
+</body>
+</html>
