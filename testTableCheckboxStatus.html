@@ -22,8 +22,11 @@
     <div class="layui-form">
       <div class="layui-form-item">
         <label class="layui-form-label">是否跨页记录</label>
-        <div class="layui-input-block">
+        <div class="layui-input-inline">
           <input type="checkbox" name="status" lay-skin="switch" lay-filter="statusSwitch">
+        </div>
+        <div class="layui-input-inline">
+          <span class="layui-btn layui-btn-sm layui-btn-danger" onclick="resetCheckboxStatus(this)" data-id="demo">重置选中状态</span>
         </div>
       </div>
     </div>
@@ -33,8 +36,11 @@
     <div class="layui-form">
       <div class="layui-form-item">
         <label class="layui-form-label">是否跨页记录</label>
-        <div class="layui-input-block">
-          <input type="checkbox" name="status" lay-skin="switch" lay-filter="statusSwitch">
+        <div class="layui-input-inline">
+          <input type="checkbox" name="status" lay-skin="switch" disabled checked="checked" lay-filter="statusSwitch">
+        </div>
+        <div class="layui-input-inline">
+          <span class="layui-btn layui-btn-sm layui-btn-danger" onclick="resetCheckboxStatus(this)" data-id="demo2">重置选中状态</span>
         </div>
       </div>
     </div>
@@ -51,11 +57,19 @@
 <script type="text/html" id="toolbarDemo">
   <div class="layui-btn-container layui-inline">
     <span class="layui-btn layui-btn-sm" lay-event="getChecked">获得选中的数据</span>
+    {{# if(d.id === 'demo'){ }}
     <span class="layui-btn layui-btn-sm layui-btn-warm" lay-event="jump" data-page="1">第1页</span>
     <span class="layui-btn layui-btn-sm layui-btn-warm" lay-event="jump" data-page="2">第2页</span>
+    {{# } }}
     <span class="layui-btn layui-btn-sm layui-btn-primary" lay-event="reload">重载</span>
   </div>
-  <div class="layui-inline"></div>
+  <div class="layui-inline">
+    {{# if(d.id === 'demo'){ }}
+    <span><span style="color: red;">※</span>url模式测试用的是json文件所以翻页请用这里按钮，不要用table的中的laypage组件，实际开发中不会有这个问题</span>
+    {{# } else {}}
+    <span>data模式测试</span>
+    {{# } }}
+  </div>
 </script>
 
 <script src="layui/src/layui.js"></script>
@@ -74,6 +88,18 @@
       return function (data) {
         return data[field];
       };
+    };
+
+    window.resetCheckboxStatus = function (elem) {
+      elem = $(elem);
+      var tableId = elem.data('id');
+      tablePlug.tableCheck.reset(tableId);
+      // 如果是data模式的需要重新同步一下数据
+      var tableConfig = tablePlug.getConfig(tableId);
+      !tableConfig.url && tableConfig.data && tablePlug.dataRenderChecked(tableConfig.data, tableId);
+      table.reload(tableId, {
+        page: {curr: 1}
+      });
     };
 
     form.on('switch(statusSwitch)', function (data) {
@@ -213,6 +239,102 @@
         "wealth": 86801934,
         "classify": "词人",
         "score": 75
+      },
+      {
+        "id": 10010,
+        "username": "user-10",
+        "sex": "女",
+        "city": "城市-10",
+        "sign": "签名-10",
+        "experience": 1016,
+        "logins": 182,
+        "wealth": 71294671,
+        "classify": "诗人",
+        "score": 34
+      },
+      {
+        "id": 10011,
+        "username": "user-11",
+        "sex": "女",
+        "city": "城市-11",
+        "sign": "签名-11",
+        "experience": 492,
+        "logins": 107,
+        "wealth": 8062783,
+        "classify": "诗人",
+        "score": 6
+      },
+      {
+        "id": 10012,
+        "username": "user-12",
+        "sex": "女",
+        "city": "城市-12",
+        "sign": "签名-12",
+        "experience": 106,
+        "logins": 176,
+        "wealth": 42622704,
+        "classify": "词人",
+        "score": 54
+      },
+      {
+        "id": 10013,
+        "username": "user-13",
+        "sex": "男",
+        "city": "城市-13",
+        "sign": "签名-13",
+        "experience": 1047,
+        "logins": 94,
+        "wealth": 59508583,
+        "classify": "诗人",
+        "score": 63
+      },
+      {
+        "id": 10014,
+        "username": "user-14",
+        "sex": "男",
+        "city": "城市-14",
+        "sign": "签名-14",
+        "experience": 873,
+        "logins": 116,
+        "wealth": 72549912,
+        "classify": "词人",
+        "score": 8
+      },
+      {
+        "id": 10015,
+        "username": "user-15",
+        "sex": "女",
+        "city": "城市-15",
+        "sign": "签名-15",
+        "experience": 1068,
+        "logins": 27,
+        "wealth": 52737025,
+        "classify": "作家",
+        "score": 28
+      },
+      {
+        "id": 10016,
+        "username": "user-16",
+        "sex": "女",
+        "city": "城市-16",
+        "sign": "签名-16",
+        "experience": 862,
+        "logins": 168,
+        "wealth": 37069775,
+        "classify": "酱油",
+        "score": 86
+      },
+      {
+        "id": 10017,
+        "username": "user-17",
+        "sex": "女",
+        "city": "城市-17",
+        "sign": "签名-17",
+        "experience": 1060,
+        "logins": 187,
+        "wealth": 66099525,
+        "classify": "作家",
+        "score": 69
       }
     ];
 
@@ -220,7 +342,7 @@
     table.render({
       elem: '#demo'
       // , height: 'full-200'
-      , url: 'json/data1.json' //数据接口
+      , url: 'json/data11.json' //数据接口
       // , data: data
       , title: '用户表'
       , page: {} //开启分页
@@ -242,6 +364,14 @@
           }
         });
 
+      },
+      parseData: function (ret) {
+        return {
+          code: ret.code,
+          msg: ret.msg,
+          count: ret.data ? (ret.data.total || 0) : 0,
+          data: ret.data ? (ret.data.list || []) : []
+        }
       }
       // , checkStatus: {}
       , cols: [
@@ -286,8 +416,8 @@
     table.render({
       elem: '#demo2'
       // , height: 'full-200'
-      , url: 'json/data1.json' //数据接口
-      // , data: data
+      // , url: 'json/data11.json' //数据接口
+      , data: data
       , title: '用户表'
       , page: {} //开启分页
       , loading: true
@@ -307,9 +437,11 @@
             tdElem.find('div.layui-table-cell').html(text);
           }
         });
-
       }
-      // , checkStatus: {}
+      , checkStatus: {
+        primaryKey: 'id',
+        default: [10001, 10002, 10007, 10009, 10013, 10015]
+      }
       , cols: [
         [
           {type: 'checkbox', fixed: 'left', rowspan: 2},
@@ -360,14 +492,10 @@
           break;
         case 'jump':
           var pageCurr = btnElem.data('page');
-          table.reload(config.id, {url: 'json/data' + pageCurr + '.json', page: {curr: pageCurr}});
+          table.reload(config.id, {url: 'json/data1' + pageCurr + '.json', page: {curr: pageCurr}});
           break;
         case 'reload':
-          table.reload(config.id, {
-            parseData: function (ret) {
-              console.log('parseData', new Date().getTime() + Math.random());
-            }
-          });
+          table.reload(config.id, {page: {curr: 1}});
           break;
       }
     });

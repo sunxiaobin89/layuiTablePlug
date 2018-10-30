@@ -22,6 +22,7 @@ layui.define(['table'], function (exports) {
     , CHECK_TYPE_ADDITIONAL = 'additional'  // 新增的
     , CHECK_TYPE_REMOVED = 'removed'  // 删除的
     , CHECK_TYPE_ORIGINAL = 'original' // 原有的
+    , PRIMARYKEY = 'id'
 
     , tableCheck = function () {
       var checked = {};
@@ -43,7 +44,6 @@ layui.define(['table'], function (exports) {
           }
         },
         init: function (tableId, data) {
-          debugger;
           this.reset(tableId);
           this.set(tableId, CHECK_TYPE_ORIGINAL, data);
         },
@@ -123,9 +123,8 @@ layui.define(['table'], function (exports) {
       return Object.prototype.toString.call(obj) === '[object Array]';
     }
 
-    // 针对表格中是否选中的数据处理
+    // 针对表格中是否选中的数据初始化处理
     , dataRenderChecked = function (data, tableId, checkName) {
-      debugger;
       if (!data || !tableId) {
         return;
       }
@@ -136,9 +135,7 @@ layui.define(['table'], function (exports) {
           return arrDel.indexOf(_data) === -1;
         }));
       for (var i = 0; i < data.length; i++) {
-        if (tableCheckStatus.indexOf(data[i].id) !== -1) {
-          data[i][checkName || table.config.checkName] = true;
-        }
+        data[i][checkName || table.config.checkName] = tableCheckStatus.indexOf(data[i].id) !== -1;
       }
     };
 
@@ -152,7 +149,14 @@ layui.define(['table'], function (exports) {
 
     if (settingTemp.checkStatus && !tableCheck.check(tableId)) {
       // 如果render的时候设置了checkStatus或者全局设置了默认跨页保存那么重置选中状态
-      tableCheck.init(tableId, settingTemp.checkStatus.default);
+      var checkedDefault = settingTemp.checkStatus.default;
+      var primaryKey = config.checkStatus.primaryKey || PRIMARYKEY;
+      tableCheck.init(tableId, checkedDefault);
+      // debugger;
+      if (!settingTemp.url && settingTemp.data && isArray(checkedDefault) && checkedDefault.length) {
+        dataRenderChecked(settingTemp.data, tableId);
+        config.data = settingTemp.data;
+      }
     }
 
     var parseData = settingTemp.parseData;
@@ -164,8 +168,6 @@ layui.define(['table'], function (exports) {
         return ret;
       };
       config.parseData.plugFlag = true;
-    } else {
-      console.log('已经初始化过')
     }
 
     var insTemp = tableRender.call(that, config);
@@ -179,7 +181,7 @@ layui.define(['table'], function (exports) {
   };
 
   // 获得table的config
-  table.getConfig = function (tableId) {
+  var getConfig = function (tableId) {
     return tabelIns[tableId] && tabelIns[tableId].config;
   };
 
@@ -188,9 +190,8 @@ layui.define(['table'], function (exports) {
   var checkStatus = table.checkStatus;
   // 重写table的checkStatus方法
   table.checkStatus = function (tableId) {
-    debugger;
     var that = this;
-    var config = table.getConfig(tableId);
+    var config = getConfig(tableId);
     if (!config || !config.checkStatus) {
       // 不跨页存储
       return checkStatus.call(that, tableId);
@@ -206,21 +207,18 @@ layui.define(['table'], function (exports) {
 
   // 监听所有的checkbox注意不要在自己的代码里面也写这个同名的监听，不然会被覆盖，如果需要可以写checkbox()这样子的，
   table.on('checkbox', function (obj) {
-    // console.log(obj.checked); //当前是否选中状态
-    // console.log(obj.data); //选中行的相关数据
-    // console.log(obj.type); //如果触发的是全选，则为：all，如果触发的是单选，则为：one
 
     var tableView = $(this).closest('.layui-table-view');
     // lay-id是2.4.4版本新增的绑定到节点上的当前table实例的id,
     // 然后再早之前的版本目前做法是去找到它的原始表格的id，所以这里有一个限制，不要自己在render的时候指定跟table的id不一样的id！！！！
     var tableId = tableView.attr('lay-id') || tableView.prev().attr('id');
-    var config = table.getConfig(tableId);
+    var config = getConfig(tableId);
     if (config.page && config.checkStatus && tableCheck.check(tableId)) {
       var _checked = obj.checked;
       var _data = obj.data;
       var _type = obj.type;
 
-      var primaryKey = config.checkStatus.primaryKey || 'id';
+      var primaryKey = config.checkStatus.primaryKey || PRIMARYKEY;
 
       if (_type === 'one') {
         tableCheck.update(tableId, _data[primaryKey], _checked);
@@ -239,6 +237,8 @@ layui.define(['table'], function (exports) {
     , CHECK_TYPE_REMOVED: CHECK_TYPE_REMOVED
     , CHECK_TYPE_ORIGINAL: CHECK_TYPE_ORIGINAL
     , tableCheck: tableCheck
+    , dataRenderChecked: dataRenderChecked
+    , getConfig: getConfig
   };
 
   exports('tablePlug', tablePlug);
