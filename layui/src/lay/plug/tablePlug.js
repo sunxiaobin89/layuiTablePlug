@@ -152,7 +152,6 @@ layui.define(['table'], function (exports) {
       var checkedDefault = settingTemp.checkStatus.default;
       var primaryKey = config.checkStatus.primaryKey || PRIMARYKEY;
       tableCheck.init(tableId, checkedDefault);
-      // debugger;
       if (!settingTemp.url && settingTemp.data && isArray(checkedDefault) && checkedDefault.length) {
         dataRenderChecked(settingTemp.data, tableId);
         config.data = settingTemp.data;
@@ -190,6 +189,7 @@ layui.define(['table'], function (exports) {
   var checkStatus = table.checkStatus;
   // 重写table的checkStatus方法
   table.checkStatus = function (tableId) {
+
     var that = this;
     var config = getConfig(tableId);
     if (!config || !config.checkStatus) {
@@ -207,7 +207,6 @@ layui.define(['table'], function (exports) {
 
   // 监听所有的checkbox注意不要在自己的代码里面也写这个同名的监听，不然会被覆盖，如果需要可以写checkbox()这样子的，
   table.on('checkbox', function (obj) {
-
     var tableView = $(this).closest('.layui-table-view');
     // lay-id是2.4.4版本新增的绑定到节点上的当前table实例的id,
     // 然后再早之前的版本目前做法是去找到它的原始表格的id，所以这里有一个限制，不要自己在render的时候指定跟table的id不一样的id！！！！
