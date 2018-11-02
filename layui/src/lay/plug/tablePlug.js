@@ -168,7 +168,8 @@ layui.define(['table'], function (exports) {
       var record = colFilterRecord.get(tableId, config.colFilterRecord);
       $.each(config.cols, function (i, item1) {
         $.each(item1, function (j, item2) {
-          item2.hide = !!record[i + '-' + j]
+          // item2.hide = !!record[i + '-' + j]
+          item2.hide = !!record[item2.field];
         });
       });
     } else {
@@ -283,7 +284,8 @@ layui.define(['table'], function (exports) {
   // 监听表格筛选的点
   $(document).on('change', 'input[lay-filter="LAY_TABLE_TOOL_COLS"]', function (event) {
     var elem = $(this);
-    var key = elem.data('key');
+    // var key = elem.data('key');
+    var key = elem.attr('name');
     var tableView = elem.closest('.layui-table-view');
     var tableId = tableView.attr('lay-id');
     var config = getConfig(tableId);
