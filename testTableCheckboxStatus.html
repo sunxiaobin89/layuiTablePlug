@@ -353,6 +353,7 @@
       , toolbar: '#toolbarDemo' //开启工具栏，此处显示默认图标，可以自定义模板，详见文档
       , totalRow: true //开启合计行
       , cellMinWidth: 90
+      // 是否开启字段筛选的记忆功能，支持true/fasle/'local'/'session'/其他 开启的情况下默认是session，除非显式的指定为'local'
       , colFilterRecord: true
       , done: function () {
         var tableView = this.elem.next();
