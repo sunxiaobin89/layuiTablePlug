@@ -353,7 +353,7 @@
       , toolbar: '#toolbarDemo' //开启工具栏，此处显示默认图标，可以自定义模板，详见文档
       , totalRow: true //开启合计行
       , cellMinWidth: 90
-      , sortType: 'server' // 开启server排序
+      , colFilterRecord: true
       , done: function () {
         var tableView = this.elem.next();
         var totalRow = tableView.find('.layui-table-total');
@@ -427,7 +427,7 @@
       , toolbar: '#toolbarDemo' //开启工具栏，此处显示默认图标，可以自定义模板，详见文档
       , totalRow: true //开启合计行
       , cellMinWidth: 90
-      , sortType: 'server' // 开启server排序
+      , autoSort: false // 不进行前端排序
       , done: function () {
         var tableView = this.elem.next();
         var totalRow = tableView.find('.layui-table-total');

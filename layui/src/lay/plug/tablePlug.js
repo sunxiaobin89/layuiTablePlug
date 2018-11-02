@@ -163,7 +163,23 @@ layui.define(['table'], function (exports) {
       config.parseData.plugFlag = true;
     }
 
+    // 如果配置了字段筛选的记忆需要更新字段的hide设置
+    if (settingTemp.colFilterRecord) {
+      var record = colFilterRecord.get(tableId, config.colFilterRecord);
+      $.each(config.cols, function (i, item1) {
+        $.each(item1, function (j, item2) {
+          item2.hide = !!record[i + '-' + j]
+        });
+      });
+    } else {
+      colFilterRecord.clear(tableId);
+    }
+
+
     var insTemp = tableRender.call(that, config);
+    var tableView = insTemp.config.elem.next();
+    // 如果table的视图上的lay-id不等于当前表格实例的id强制修改。
+    tableView.attr('lay-id') !== insTemp.config.id && tableView.attr('lay-id', insTemp.config.id);
     return tabelIns[insTemp.config.id] = insTemp;
   };
   var tableReload = table.reload;
@@ -198,13 +214,12 @@ layui.define(['table'], function (exports) {
     }
   };
 
-  // 监听所有的checkbox注意不要在自己的代码里面也写这个同名的监听，不然会被覆盖，如果需要可以写checkbox()这样子的，
+  // 监听所有的表格中的type:'checkbox'注意不要在自己的代码里面也写这个同名的监听，不然会被覆盖，如果需要可以写checkbox()这样子的，
   table.on('checkbox', function (obj) {
 
     var tableView = $(this).closest('.layui-table-view');
-    // lay-id是2.4.4版本新增的绑定到节点上的当前table实例的id,
-    // 然后再早之前的版本目前做法是去找到它的原始表格的id，所以这里有一个限制，不要自己在render的时候指定跟table的id不一样的id！！！！
-    var tableId = tableView.attr('lay-id') || tableView.prev().attr('id');
+    // lay-id是2.4.4版本新增的绑定到节点上的当前table实例的id,经过plug的改造render将旧版本把这个id也绑定到视图的div上了。
+    var tableId = tableView.attr('lay-id');
     var config = getConfig(tableId);
     if (config.page && config.checkStatus && tableCheck.check(tableId)) {
       var _checked = obj.checked;
@@ -224,13 +239,70 @@ layui.define(['table'], function (exports) {
     }
   });
 
+  // 让被美化的复选框支持原始节点的change事件
+  form.on('checkbox', function (data) {
+    $(data.elem).change();
+  });
+
+  // 表格筛选列的状态记录的封装
+  var colFilterRecord = (function () {
+    var recodeStoreName = 'tablePlug_col_filter_record';
+    var getStoreType = function (recordType) {
+      return recordType === 'local' ? 'data' : 'sessionData';
+    };
+    return {
+      // 记录
+      set: function (tableId, key, checked, recordType) {
+        if (!tableId || !key) {
+          return;
+        }
+        // 默认用sessionStore
+        var storeType = getStoreType(recordType);
+        // var dataTemp = layui[storeType](recodeStoreName)[tableId] || {};
+        var dataTemp = this.get(tableId, recordType);
+        dataTemp[key] = !checked;
+        layui[storeType](recodeStoreName, {
+          key: tableId,
+          value: dataTemp
+        })
+      },
+      get: function (tableId, recordType) {
+        return layui[getStoreType(recordType)](recodeStoreName)[tableId]||{};
+      },
+      clear: function (tableId) {
+        $.each(['data', 'sessionData'], function (index, type) {
+          layui[type](recodeStoreName, {
+            key: tableId,
+            remove: true
+          });
+        });
+      }
+    };
+  })();
+
+  // 监听表格筛选的点
+  $(document).on('change', 'input[lay-filter="LAY_TABLE_TOOL_COLS"]', function (event) {
+    var elem = $(this);
+    var key = elem.data('key');
+    var tableView = elem.closest('.layui-table-view');
+    var tableId = tableView.attr('lay-id');
+    var config = getConfig(tableId);
+    var filterRecord = config.colFilterRecord;
+    if (filterRecord) {
+      colFilterRecord.set(tableId, key, this.checked, filterRecord);
+    } else {
+      colFilterRecord.clear(tableId)
+    }
+  });
+
   //外部接口
   var tablePlug = {
     CHECK_TYPE_ADDITIONAL: CHECK_TYPE_ADDITIONAL
     , CHECK_TYPE_REMOVED: CHECK_TYPE_REMOVED
     , CHECK_TYPE_ORIGINAL: CHECK_TYPE_ORIGINAL
     , tableCheck: tableCheck
-    , getConfig: getConfig
+    , getConfig: getConfig  // 表格复选列的方法封装
+    , colFilterRecord: colFilterRecord  // 表格字段筛选记忆功能的封装
   };
 
   exports('tablePlug', tablePlug);
