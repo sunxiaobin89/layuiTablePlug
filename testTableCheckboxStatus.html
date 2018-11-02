@@ -353,7 +353,7 @@
       , toolbar: '#toolbarDemo' //开启工具栏，此处显示默认图标，可以自定义模板，详见文档
       , totalRow: true //开启合计行
       , cellMinWidth: 90
-      // 是否开启字段筛选的记忆功能，支持true/fasle/'local'/'session'/其他 开启的情况下默认是session，除非显式的指定为'local'
+      // 是否开启字段筛选的记忆功能，支持true/false/'local'/'session'/其他 开启的情况下默认是session，除非显式的指定为'local'
       , colFilterRecord: true
       , done: function () {
         var tableView = this.elem.next();
@@ -442,8 +442,11 @@
           }
         });
       }
+      // 是否开启复选列状态记录 支持true/false/{} true的情况下primaryKey默认为id，default默认为[]
       , checkStatus: {
+        // 定制当前数据的主键字段，默认为id，
         primaryKey: 'id',
+        // 原始已经选中的记录的主键值集合
         default: [10001, 10002, 10007, 10009, 10013, 10015]
       }
       , cols: [
