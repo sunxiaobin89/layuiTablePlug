@@ -195,52 +195,49 @@ layui.define(['table'], function (exports) {
     // 如果table的视图上的lay-id不等于当前表格实例的id强制修改,这个是个非常实用的配置。
     tableView.attr('lay-id') !== insTemp.config.id && tableView.attr('lay-id', insTemp.config.id);
 
-    // if (smartReload.enable() && checkSmartReloadCodition && insTemp.config.smartReloadModel) {
-    if (smartReload.enable() && checkSmartReloadCodition) {
-      var insObj = getIns(insTemp.config.id);
-      // 暂时用这个什么时候数据成功与否都会调用的方法来打补丁后面调优
-      var setColsWidth = insObj.setColsWidth;
-      insObj.setColsWidth = function () {
-        var that = this;
-        setColsWidth.call(that);
-        if (that.elem.data('patch') !== true) {
-          return ;
-        }
-
-        // 调整过了之后也把状态重置一下
-        that.elem.data('patch', null);
-
-        // 打补丁
-        var noneElem = tableView.find('.' + NONE);
-        if (noneElem.length) {
-          // 出现异常
-          that.layFixed.find('tbody').html('');
-          that.layFixed.addClass(HIDE);
-
-          var laymain = ['<table cellspacing="0" cellpadding="0" border="0" class="layui-table"><tbody></tbody></table>'];
-
-          var prevElem = noneElem.prev();
-          if (!prevElem || !prevElem.length) {
-            $(laymain.join('')).insertBefore(noneElem);
-          }
-          that.layTotal.addClass(HIDE);
-          that.layPage.addClass(HIDE);
-          that.layBox.find('input[lay-filter="layTableAllChoose"]').prop('checked', false);
-        } else {
-          var layPreELem = that.layFixed.prevObject;
-          if (!layPreELem.find(that.layFixed.selector).length) {
-            // 数据为空的时候会remove掉固定列的dom，正常了要加回来
-            that.layBox.append(that.layFixed);
-          }
-          // 出现异常的时候隐藏了，正常就显示回来
-          that.layFixLeft.removeClass(HIDE);
-          that.layTotal.removeClass(HIDE);
-          // that.layPage.removeClass(HIDE);
-        }
-
-        that.renderForm('checkbox')
+    var insObj = getIns(insTemp.config.id);
+    // 暂时用这个什么时候数据成功与否都会调用的方法来打补丁(后面调优)
+    var setColsWidth = insObj.setColsWidth;
+    insObj.setColsWidth = function () {
+      var that = this;
+      setColsWidth.call(that);
+      if (that.elem.data('patch') !== true) {
+        return;
       }
-    }
+
+      // 调整过了之后也把状态重置一下
+      that.elem.data('patch', null);
+
+      // 打补丁
+      var noneElem = tableView.find('.' + NONE);
+      if (noneElem.length) {
+        // 出现异常
+        that.layFixed.find('tbody').html('');
+        that.layFixed.addClass(HIDE);
+
+        var laymain = ['<table cellspacing="0" cellpadding="0" border="0" class="layui-table"><tbody></tbody></table>'];
+
+        var prevElem = noneElem.prev();
+        if (!prevElem || !prevElem.length) {
+          $(laymain.join('')).insertBefore(noneElem);
+        }
+        that.layTotal.addClass(HIDE);
+        that.layPage.addClass(HIDE);
+        that.layBox.find('input[lay-filter="layTableAllChoose"]').prop('checked', false);
+      } else {
+        var layPreELem = that.layFixed.prevObject;
+        if (!layPreELem.find(that.layFixed.selector).length) {
+          // 数据为空的时候会remove掉固定列的dom，正常了要加回来
+          that.layBox.append(that.layFixed);
+        }
+        // 出现异常的时候隐藏了，正常就显示回来
+        that.layFixLeft.removeClass(HIDE);
+        that.layTotal.removeClass(HIDE);
+        // that.layPage.removeClass(HIDE);
+      }
+
+      that.renderForm('checkbox');
+    };
 
     return tabelIns[insTemp.config.id] = insTemp;
   };
@@ -269,13 +266,13 @@ layui.define(['table'], function (exports) {
         });
       },
       check: function () {
-        
+
       }
     }
   })();
 
   // 是否弃用只能重载模式
-  var smartReload = (function() {
+  var smartReload = (function () {
     var enable = false;
     return {
       enable: function () {
@@ -470,7 +467,7 @@ layui.define(['table'], function (exports) {
     , getIns: getIns  // 获得某个表格的实例的封装
     , queryParams: queryParams // 表格查询模式的配置封装
     , smartReload: smartReload // 全局设置一个是否开启智能重载模式
-    
+
   };
 
   exports('tablePlug', tablePlug);
