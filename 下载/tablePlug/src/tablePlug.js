@@ -33,7 +33,7 @@ layui.define(['table'], function (exports) {
       if (checkSmartReloadCodition) {
         return table.thisTable.that[id];
       }
-      hint.error('getIns方法需要在对layui的table进行一定必要的改造才能使用！请到 https://fly.layui.com/jie/43124/ 里面的查看相关内容将table.js进行一个非常小的改造，之后再试试看。');
+      hint.error('getIns方法需要在对layui的table进行一定必要的改造才能使用！请到 https://fly.layui.com/jie/43423/ 里面的查看相关内容将table.js进行一个非常小的改造，之后再试试看。');
       return {};
     }
 
@@ -331,7 +331,7 @@ layui.define(['table'], function (exports) {
 
       if (!reloadModel) {
         if (!checkSmartReloadCodition) {
-          console.log('您开启了智能重载模式，但是未检测到一个必要的前提，另参考帖子 https://fly.layui.com/jie/43124/ 里面的相关内容将table.js进行一个非常小的改造，之后再试试看。')
+          hint.error('您开启了智能重载模式，但是未检测到一个必要的前提，另参考帖子 https://fly.layui.com/jie/43423/ 里面的相关内容将table.js进行一个非常小的改造，之后再试试看。')
         } else {
           var insTemp = getIns(tableId);
           if (typeof config.page === 'object') {
