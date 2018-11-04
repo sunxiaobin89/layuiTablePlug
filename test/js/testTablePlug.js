@@ -30,7 +30,6 @@ layui.config({base: 'layui/src/lay/plug/'}).define(['tablePlug'], function (expo
 
   // 是否跨页的开关监听
   form.on('switch(statusSwitch)', function (data) {
-
     var elem = $(data.elem);
     var formElem = elem.closest('.layui-form');
     var tableElem = formElem.next('table');
@@ -42,6 +41,28 @@ layui.config({base: 'layui/src/lay/plug/'}).define(['tablePlug'], function (expo
       page: {
         curr: 1
       }
+    });
+  });
+
+  // 是否启用智能reload
+  form.on('switch(smartSwitch)', function (data) {
+
+    tablePlug.smartReload.enable(data.elem.checked);
+    $('[lay-event="reload"][data-url="data11"]').first().click();
+
+  });
+
+  // 当前表格要不要智能reload
+  form.on('switch(tableSmartSwitch)', function (data) {
+
+    var elem = $(data.elem);
+    var formElem = elem.closest('.layui-form');
+    var tableElem = formElem.next('table');
+
+    var tableId = tableElem.next() ? (tableElem.next().attr('lay-id') || tableElem.attr('id')) : tableElem.attr('id');
+    tablePlug.tableCheck.reset(tableId);
+    table.reload(tableId, {
+      smartReloadModel: data.elem.checked
     });
 
   });

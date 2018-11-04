@@ -28,6 +28,15 @@
         <div class="layui-input-inline">
           <span class="layui-btn layui-btn-sm layui-btn-danger" onclick="resetCheckboxStatus(this)" data-id="demo">重置选中状态</span>
         </div>
+
+        <label class="layui-form-label" style="width: 135px;">是否启用智能reload</label>
+        <div class="layui-input-inline">
+          <input type="checkbox" name="status" lay-skin="switch" lay-filter="smartSwitch" checked="">
+        </div>
+        <label class="layui-form-label" style="width: 190px;">当前表格要不要智能reload</label>
+        <div class="layui-input-inline">
+          <input type="checkbox" name="status" lay-skin="switch" lay-filter="tableSmartSwitch" checked="">
+        </div>
       </div>
     </div>
     <table class="layui-hide" id="demo" lay-filter="test"></table>
@@ -54,8 +63,8 @@
     <span class="layui-btn layui-btn-sm layui-btn-danger" lay-event="reload" data-url="data_null">error(404,500)</span>
     <span class="layui-btn layui-btn-sm layui-btn-primary" lay-event="reload" data-url="data_none">无数据</span>
     <span class="layui-btn layui-btn-sm layui-btn-warm" lay-event="reload" data-url="data_code_error">状态码异常</span>
-    <span class="layui-btn layui-btn-sm layui-btn-warm" lay-event="reload" data-url="data11" data-option="{totalRow: false}">不显示totalRow</span>
-    <span class="layui-btn layui-btn-sm layui-btn-primary" lay-event="reload" data-url="data11" data-option="{totalRow: true}">显示totalRow</span>
+    <!--<span class="layui-btn layui-btn-sm layui-btn-warm" lay-event="reload" data-url="data11" data-option="{totalRow: false}">不显示totalRow</span>-->
+    <!--<span class="layui-btn layui-btn-sm layui-btn-primary" lay-event="reload" data-url="data11" data-option="{totalRow: true}">显示totalRow</span>-->
     <span class="layui-btn layui-btn-sm" lay-event="reload" data-url="data11">正常</span>
   </div>
 </script>
@@ -84,7 +93,7 @@
     //执行一个 table 实例
     table.render({
       elem: '#demo'
-      // , height: 'full-200'
+      , height: 600
       , url: 'json/data11.json' //数据接口
       // , data: data
       , page: {}

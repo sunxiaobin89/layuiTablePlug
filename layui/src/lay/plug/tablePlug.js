@@ -195,7 +195,8 @@ layui.define(['table'], function (exports) {
     // 如果table的视图上的lay-id不等于当前表格实例的id强制修改,这个是个非常实用的配置。
     tableView.attr('lay-id') !== insTemp.config.id && tableView.attr('lay-id', insTemp.config.id);
 
-    if (smartReload && checkSmartReloadCodition && insTemp.config.smartReloadModel) {
+    // if (smartReload.enable() && checkSmartReloadCodition && insTemp.config.smartReloadModel) {
+    if (smartReload.enable() && checkSmartReloadCodition) {
       var insObj = getIns(insTemp.config.id);
       // 暂时用这个什么时候数据成功与否都会调用的方法来打补丁后面调优
       var setColsWidth = insObj.setColsWidth;
@@ -299,7 +300,7 @@ layui.define(['table'], function (exports) {
   // console.log(queryParams.getParams());
 
   // 添加两个目前tablePlug扩展的属性到查询模式白名单中
-  queryParams.registParams('colFilterRecord', 'checkStatus');
+  queryParams.registParams('colFilterRecord', 'checkStatus', 'smartReloadModel');
 
   table.reload = function (tableId, config) {
     var that = this;
@@ -310,7 +311,7 @@ layui.define(['table'], function (exports) {
       // 如果开启了智能重载模式
       // 是否为重载模式
       var reloadModel = false;
-      if (!!configTemp.page !== !!config.page) {
+      if (config.page && !!configTemp.page !== !!config.page) {
         // 如果是否分页发生了改变
         reloadModel = true;
       }
