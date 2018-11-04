@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport"
         content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-  <title>layui在线调试</title>
+  <title>tablePlug</title>
   <link rel="stylesheet" href="layui/src/css/layui.css" media="all">
   <style>
     body {
@@ -63,6 +63,7 @@
     {{# if(d.id === 'demo'){ }}
     <span class="layui-btn layui-btn-sm layui-btn-warm" lay-event="jump" data-page="1">第1页</span>
     <span class="layui-btn layui-btn-sm layui-btn-warm" lay-event="jump" data-page="2">第2页</span>
+    <span class="layui-btn layui-btn-sm layui-btn-warm" lay-event="reload" data-url="data_none">无数据</span>
     {{# } }}
     <span class="layui-btn layui-btn-sm layui-btn-primary" lay-event="reload">重载</span>
   </div>
@@ -78,13 +79,15 @@
 <script src="layui/src/layui.js"></script>
 <script>
 
-  layui.config({base: 'layui/src/lay/plug/'}).use(['table', 'tablePlug'], function () {
+  layui.config({base: 'test/js/'}).use(['testTablePlug'], function () {
     var $ = layui.jquery
       , layer = layui.layer //弹层
       , form = layui.form //弹层
       , table = layui.table //表格
-      , tablePlug = layui.tablePlug //表格插件
+      , tablePlug = layui.tablePlug; //表格插件
 
+    // 当前这个测试页面测试的重点不是智能重载，所以关掉该功能，实际上该功能也是默认关闭的，可以不执行下面这句代码，也可以强制指定。
+    tablePlug.smartReload.enable(false);
 
     // 处理操作列
     var fn1 = function (field) {
@@ -92,35 +95,6 @@
         return data[field];
       };
     };
-
-    window.resetCheckboxStatus = function (elem) {
-      elem = $(elem);
-      var tableId = elem.data('id');
-      tablePlug.tableCheck.reset(tableId);
-      // 如果是data模式的需要重新同步一下数据
-      var tableConfig = tablePlug.getConfig(tableId);
-      !tableConfig.url && tableConfig.data && tablePlug.dataRenderChecked(tableConfig.data, tableId);
-      table.reload(tableId, {
-        page: {curr: 1}
-      });
-    };
-
-    form.on('switch(statusSwitch)', function (data) {
-
-      var elem = $(data.elem);
-      var formElem = elem.closest('.layui-form');
-      var tableElem = formElem.next('table');
-
-      var tableId = tableElem.next() ? (tableElem.next().attr('lay-id') || tableElem.attr('id')) : tableElem.attr('id');
-      tablePlug.tableCheck.reset(tableId);
-      table.reload(tableId, {
-        checkStatus: data.elem.checked ? {} : null,
-        page: {
-          curr: 1
-        }
-      });
-
-    });
 
     var data = [
       {
@@ -367,7 +341,6 @@
             tdElem.find('div.layui-table-cell').html(text);
           }
         });
-
       },
       parseData: function (ret) {
         return {
@@ -486,49 +459,6 @@
 
         ]
       ]
-    });
-
-    //监听头工具栏事件
-    table.on('toolbar(test)', function (obj) {
-      var config = obj.config;
-      var btnElem = $(this);
-      var tableId = config.id;
-      switch (obj.event) {
-        case 'getChecked':
-          layer.alert(JSON.stringify(table.checkStatus(tableId)));
-          break;
-        case 'deleteSome':
-          // 获得当前选中的，不管它的状态是什么？只要是选中的都会获得
-          var checkedIds = tablePlug.tableCheck.getChecked(tableId);
-          layer.confirm('您是否确定要删除选中的' + checkedIds.length + '条记录？', function () {
-            layer.alert('do something with: ' + JSON.stringify(checkedIds));
-          });
-          break;
-        case 'jump':
-          var pageCurr = btnElem.data('page');
-          table.reload(config.id, {url: 'json/data1' + pageCurr + '.json', page: {curr: pageCurr}});
-          break;
-        case 'reload':
-          table.reload(config.id, {page: {curr: 1}});
-          break;
-      }
-    });
-
-    //监听行工具事件
-    table.on('tool(test)', function (obj) { //注：tool 是工具条事件名，test 是 table 原始容器的属性 lay-filter="对应的值"
-      var data = obj.data //获得当前行数据
-        , layEvent = obj.event; //获得 lay-event 对应的值
-      if (layEvent === 'detail') {
-        layer.msg('查看操作');
-      } else if (layEvent === 'del') {
-        layer.confirm('真的删除行么', function (index) {
-          obj.del(); //删除对应行（tr）的DOM结构
-          layer.close(index);
-          //向服务端发送删除指令
-        });
-      } else if (layEvent === 'edit') {
-        layer.msg('编辑操作');
-      }
     });
   });
 </script>

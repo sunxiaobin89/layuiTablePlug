@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <title>tablePlug</title>
+  <link rel="stylesheet" href="layui/src/css/layui.css" media="all">
+  <style>
+    body {
+      margin: 10px;
+    }
+
+    .layui-form-label {
+      width: 100px;
+    }
+  </style>
+</head>
+<body>
+<div class="layui-row layui-col-space10">
+  <div class="layui-col-xs12">
+    <div class="layui-form">
+      <div class="layui-form-item">
+        <label class="layui-form-label">是否跨页记录</label>
+        <div class="layui-input-inline">
+          <input type="checkbox" name="status" lay-skin="switch" lay-filter="statusSwitch">
+        </div>
+        <div class="layui-input-inline">
+          <span class="layui-btn layui-btn-sm layui-btn-danger" onclick="resetCheckboxStatus(this)" data-id="demo">重置选中状态</span>
+        </div>
+      </div>
+    </div>
+    <table class="layui-hide" id="demo" lay-filter="test"></table>
+  </div>
+</div>
+
+<script type="text/html" id="barDemo">
+  <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="detail">查看</a>
+  <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
+  <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+
+<script type="text/html" id="toolbarDemo">
+  <div class="layui-btn-container layui-inline">
+    <span class="layui-btn layui-btn-sm" lay-event="getChecked">获得选中的数据</span>
+    <span class="layui-btn layui-btn-sm layui-btn-warm" lay-event="jump" data-page="1">第1页</span>
+    <span class="layui-btn layui-btn-sm layui-btn-warm" lay-event="jump" data-page="2">第2页</span>
+    <span class="layui-btn layui-btn-sm layui-btn-primary" lay-event="reload">重载</span>
+  </div>
+  <div class="layui-input-inline">
+    <input name="name" class="layui-input">
+  </div>
+  <div class="layui-btn-container layui-inline">
+    <span class="layui-btn layui-btn-sm layui-btn-danger" lay-event="reload" data-url="data_null">error(404,500)</span>
+    <span class="layui-btn layui-btn-sm layui-btn-primary" lay-event="reload" data-url="data_none">无数据</span>
+    <span class="layui-btn layui-btn-sm layui-btn-warm" lay-event="reload" data-url="data_code_error">状态码异常</span>
+    <span class="layui-btn layui-btn-sm layui-btn-warm" lay-event="reload" data-url="data11" data-option="{totalRow: false}">不显示totalRow</span>
+    <span class="layui-btn layui-btn-sm layui-btn-primary" lay-event="reload" data-url="data11" data-option="{totalRow: true}">显示totalRow</span>
+    <span class="layui-btn layui-btn-sm" lay-event="reload" data-url="data11">正常</span>
+  </div>
+</script>
+
+<script src="layui/src/layui.js"></script>
+<script>
+
+  layui.config({base: 'test/js/'}).use(['testTablePlug'], function () {
+    var $ = layui.jquery
+      , layer = layui.layer //弹层
+      , form = layui.form //弹层
+      , table = layui.table //表格
+      , tablePlug = layui.tablePlug //表格插件
+
+    // 开启智能重载模式，注意这个需要修改一处源码才能支持，考虑到有的人要有的人不要，所以做了一个全局的开关，默认是关闭的，开了之后在修改源码的基础上
+    // 支持智能的reload，支持重载和重新请求数据两种模式，同时支持对某个table设置是否需要这个功能smartReloadModel: true/flase
+    tablePlug.smartReload.enable(true);
+
+    // 处理操作列
+    var fn1 = function (field) {
+      return function (data) {
+        return data[field];
+      };
+    };
+
+    //执行一个 table 实例
+    table.render({
+      elem: '#demo'
+      // , height: 'full-200'
+      , url: 'json/data11.json' //数据接口
+      // , data: data
+      , page: {}
+      , title: '用户表'
+      // , page: {} //开启分页
+      , loading: true
+      , toolbar: '#toolbarDemo' //开启工具栏，此处显示默认图标，可以自定义模板，详见文档
+      , totalRow: true //开启合计行
+      , cellMinWidth: 90
+      // 是否开启字段筛选的记忆功能，支持true/false/'local'/'session'/其他 开启的情况下默认是session，除非显式的指定为'local'
+      , colFilterRecord: true
+      // 是否开启智能reload的模式
+      , smartReloadModel: true
+      , done: function () {
+        var tableView = this.elem.next();
+        var totalRow = tableView.find('.layui-table-total');
+        var limit = this.page ? this.page.limit : this.limit;
+        layui.each(totalRow.find('td'), function (index, tdElem) {
+          tdElem = $(tdElem);
+          var text = tdElem.text();
+          if (text && !isNaN(text)) {
+            text = (parseFloat(text) / limit).toFixed(2);
+            tdElem.find('div.layui-table-cell').html(text);
+          }
+        });
+
+      },
+      parseData: function (ret) {
+        return {
+          code: ret.code,
+          msg: ret.msg,
+          count: ret.data ? (ret.data.total || 0) : 0,
+          data: ret.data ? (ret.data.list || []) : []
+        }
+      }
+      // , checkStatus: {}
+      , cols: [
+        [
+          {type: 'checkbox', fixed: 'left', rowspan: 2},
+          {
+            type: 'numbers',
+            fixed: 'left',
+            rowspan: 2
+          },
+          {
+            field: 'id',
+            title: 'ID',
+            width: 80,
+            sort: true,
+            fixed: 'left',
+            totalRowText: '平均:',
+            rowspan: 2
+          },
+          {title: '基本信息', colspan: 2, align: 'center'},
+          {title: '详细信息', colspan: 6, align: 'center'},
+          {
+            fixed: 'right',
+            type: 'toolbar',
+            field: 'toolbar_common',
+            title: '操作',
+            width: 190,
+            align: 'center',
+            toolbar: '#barDemo',
+            rowspan: 2
+          }
+        ]
+        , [ //表头
+          {field: 'username', title: '姓名', hideable: false}
+          , {field: 'sex', title: '性别', width: 90, sort: true}
+          , {field: 'experience', title: '积分', width: 90, sort: true, totalRow: true}
+          , {field: 'score', title: '评分', edit: true, width: 90, sort: true, totalRow: true}
+          , {field: 'city', title: '城市', width: 150, templet: fn1('city')}
+          , {field: 'sign', title: '签名', width: 200}
+          , {field: 'classify', title: '职业', width: 100}
+          , {field: 'wealth', title: '财富', width: 135, sort: true, totalRow: true}
+
+        ]
+      ]
+    });
+  });
+</script>
+</body>
+</html>

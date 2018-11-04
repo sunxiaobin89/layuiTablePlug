@@ -146,7 +146,7 @@ layui.define(['laytpl', 'laypage', 'layer', 'form', 'util'], function(exports){
     ,'{{# } }}'
     
     ,'<div class="layui-table-box">'
-      ,'{{# if(d.loading){ }}'
+      ,'{{# if(d.data.loading){ }}'
       ,'<div class="layui-table-init" style="background-color: #fff;">'
         ,'<i class="layui-icon layui-icon-loading layui-icon"></i>'
       ,'</div>'
@@ -1913,6 +1913,9 @@ layui.define(['laytpl', 'laypage', 'layer', 'form', 'util'], function(exports){
     delete data[table.config.indexName];
     return data;
   };
+
+  // 把thisTable透漏出去，方便拓展
+  table.thisTable = thisTable;
   
   //自动完成渲染
   table.init();
