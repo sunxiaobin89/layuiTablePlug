@@ -302,13 +302,14 @@ layui.define(['table'], function (exports) {
   table.reload = function (tableId, config) {
     var that = this;
 
+    var configOld = getConfig(tableId);
     var configTemp = $.extend(true, {}, getConfig(tableId), config);
     if (smartReload.enable() && configTemp.smartReloadModel) {
 
       // 如果开启了智能重载模式
       // 是否为重载模式
       var reloadModel = false;
-      if (config.page && !!configTemp.page !== !!config.page) {
+      if (!!configTemp.page !== !!configOld.page) {
         // 如果是否分页发生了改变
         reloadModel = true;
       }
@@ -341,7 +342,7 @@ layui.define(['table'], function (exports) {
             insTemp.page = 1;
           }
           // 记录一下需要打补丁
-          insTemp.elem.data('patch', true);
+          // insTemp.elem.data('patch', true);
           insTemp.loading();
           insTemp.pullData(insTemp.page);
           return table.thisTable.call(insTemp);
