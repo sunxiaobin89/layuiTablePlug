@@ -196,8 +196,14 @@ layui.define(['table'], function (exports) {
     tableView.attr('lay-id') !== insTemp.config.id && tableView.attr('lay-id', insTemp.config.id);
 
     var insObj = getIns(insTemp.config.id);
+
     // 暂时用这个什么时候数据成功与否都会调用的方法来打补丁(后面调优)
     var setColsWidth = insObj.setColsWidth;
+
+    // 在render的时候就调整一下宽度，不要不显示或者拧成一团
+    setColsWidth.call(insObj);
+    insObj.loading();
+
     insObj.setColsWidth = function () {
       var that = this;
       setColsWidth.call(that);
@@ -342,7 +348,7 @@ layui.define(['table'], function (exports) {
             insTemp.page = 1;
           }
           // 记录一下需要打补丁
-          // insTemp.elem.data('patch', true);
+          insTemp.elem.data('patch', true);
           insTemp.loading();
           insTemp.pullData(insTemp.page);
           return table.thisTable.call(insTemp);
