@@ -24,6 +24,7 @@ layui.define(['table'], function (exports) {
     , CHECK_TYPE_ORIGINAL = 'original' // 原有的
     , NONE = 'layui-none'
     , HIDE = 'layui-hide'
+    , LOADING = 'layui-tablePlug-loading-p'
 
     // 检测是否满足智能重载的条件
     , checkSmartReloadCodition = (function () {
@@ -196,54 +197,78 @@ layui.define(['table'], function (exports) {
     tableView.attr('lay-id') !== insTemp.config.id && tableView.attr('lay-id', insTemp.config.id);
 
     var insObj = getIns(insTemp.config.id);
+    if (insObj && insObj.index) { // 只有经过table源码修改了才能继续进一步的改造
+      // 暂时用这个什么时候数据成功与否都会调用的方法来打补丁(后面调优)
+      var setColsWidth = insObj.setColsWidth;
 
-    // 暂时用这个什么时候数据成功与否都会调用的方法来打补丁(后面调优)
-    var setColsWidth = insObj.setColsWidth;
+      // 在render的时候就调整一下宽度，不要不显示或者拧成一团
+      setColsWidth.call(insObj);
 
-    // 在render的时候就调整一下宽度，不要不显示或者拧成一团
-    setColsWidth.call(insObj);
-    insObj.loading();
-
-    insObj.setColsWidth = function () {
-      var that = this;
-      setColsWidth.call(that);
-      if (that.elem.data('patch') !== true) {
-        return;
-      }
-
-      // 调整过了之后也把状态重置一下
-      that.elem.data('patch', null);
-
-      // 打补丁
-      var noneElem = tableView.find('.' + NONE);
-      if (noneElem.length) {
-        // 出现异常
-        that.layFixed.find('tbody').html('');
-        that.layFixed.addClass(HIDE);
-
-        var laymain = ['<table cellspacing="0" cellpadding="0" border="0" class="layui-table"><tbody></tbody></table>'];
-
-        var prevElem = noneElem.prev();
-        if (!prevElem || !prevElem.length) {
-          $(laymain.join('')).insertBefore(noneElem);
+      var loading = insObj.loading;
+      insObj.loading = function (hide) {
+        var that = this;
+        loading.call(that, hide);
+        if (!hide && that.layInit) {
+          // 添加一个动画
+          that.layInit.addClass('layui-anim layui-anim-rotate layui-anim-loop');
+          if (!that.layMain.height()) {
+            // 如果当前没有内容，添加一个空的div让它有显示的地方
+            that.layBox.append($('<div class="' + LOADING + '" style="height: 56px;"></div>'));
+          }
+          var offsetHeight = 0;
+          if(that.layMain.height() - that.layMain.prop('clientHeight') > 0){
+            // 如果出现滚动条，要减去滚动条的宽度
+            offsetHeight = that.getScrollWidth();
+          }
+          that.layInit.height(that.layBox.height() - that.layHeader.height() - offsetHeight).css('marginTop', that.layHeader.height()+'px');
         }
-        that.layTotal.addClass(HIDE);
-        that.layPage.addClass(HIDE);
-        that.layBox.find('input[lay-filter="layTableAllChoose"]').prop('checked', false);
-      } else {
-        var layPreELem = that.layFixed.prevObject;
-        if (!layPreELem.find(that.layFixed.selector).length) {
-          // 数据为空的时候会remove掉固定列的dom，正常了要加回来
-          that.layBox.append(that.layFixed);
-        }
-        // 出现异常的时候隐藏了，正常就显示回来
-        that.layFixLeft.removeClass(HIDE);
-        that.layTotal.removeClass(HIDE);
-        // that.layPage.removeClass(HIDE);
-      }
+      };
+      // 补充被初始化的时候设置宽度时候被关掉的loading
+      insObj.loading();
 
-      that.renderForm('checkbox');
-    };
+      insObj.setColsWidth = function () {
+        var that = this;
+        that.layBox.find('.' + LOADING).remove();
+        setColsWidth.call(that);
+        if (that.elem.data('patch') !== true) {
+          return;
+        }
+
+        // 调整过了之后也把状态重置一下
+        that.elem.data('patch', null);
+
+        // 打补丁
+        var noneElem = tableView.find('.' + NONE);
+        if (noneElem.length) {
+          // 出现异常
+          that.layFixed.find('tbody').html('');
+          that.layFixed.addClass(HIDE);
+
+          var laymain = ['<table cellspacing="0" cellpadding="0" border="0" class="layui-table"><tbody></tbody></table>'];
+
+          var prevElem = noneElem.prev();
+          if (!prevElem || !prevElem.length) {
+            $(laymain.join('')).insertBefore(noneElem);
+          }
+          that.layTotal.addClass(HIDE);
+          that.layPage.addClass(HIDE);
+          that.layBox.find('input[lay-filter="layTableAllChoose"]').prop('checked', false);
+        } else {
+          var layPreELem = that.layFixed.prevObject;
+          if (!layPreELem.find(that.layFixed.selector).length) {
+            // 数据为空的时候会remove掉固定列的dom，正常了要加回来
+            that.layBox.append(that.layFixed);
+          }
+          // 出现异常的时候隐藏了，正常就显示回来
+          that.layFixLeft.removeClass(HIDE);
+          that.layTotal.removeClass(HIDE);
+          // that.layPage.removeClass(HIDE);
+        }
+
+        that.renderForm('checkbox');
+      };
+    }
+
 
     return tabelIns[insTemp.config.id] = insTemp;
   };
@@ -252,7 +277,7 @@ layui.define(['table'], function (exports) {
   var tableReload = table.reload;
   var queryParams = (function () {
     // 查询模式的白名单
-    var params = ['url', 'method', 'where', 'contentType', 'headers', 'parseData', 'request', 'response', 'data', 'page'];
+    var params = ['url', 'method', 'where', 'contentType', 'headers', 'parseData', 'request', 'response', 'data', 'page', 'initSort', 'autoSort'];
     return {
       // 获得查询的属性
       getParams: function () {
