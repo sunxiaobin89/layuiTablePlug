@@ -25,6 +25,8 @@ layui.define(['table'], function (exports) {
     , NONE = 'layui-none'
     , HIDE = 'layui-hide'
     , LOADING = 'layui-tablePlug-loading-p'
+    , ELEM_HEADER = '.layui-table-header'
+    , COLGROUP = 'colGroup' // 定义一个变量，方便后面如果table内部有变化可以对应的修改一下即可
 
     // 检测是否满足智能重载的条件
     , checkSmartReloadCodition = (function () {
@@ -191,13 +193,29 @@ layui.define(['table'], function (exports) {
       colFilterRecord.clear(tableId);
     }
 
+    // 处理复杂表头的单列和并列的问题
+    if (config.cols.length > 1) {
+      layui.each(config.cols, function (i1, item1) {
+        layui.each(item1, function (i2, item2) {
+          if (!item2.field && !item2.toolbar && (!item2.colspan || item2.colspan===1)) {
+            item2[COLGROUP] = true;
+          } else if (item2[COLGROUP] && !(item2.colspan > 1)) {
+            // 如果有乱用colGroup的，明明是一个字段列还给它添加上这个属性的会在这里KO掉，叫我表格小卫士^_^
+            item2[COLGROUP] = false;
+          }
+        });
+      });
+    }
+
     var insTemp = tableRender.call(that, config);
     var tableView = insTemp.config.elem.next();
     // 如果table的视图上的lay-id不等于当前表格实例的id强制修改,这个是个非常实用的配置。
     tableView.attr('lay-id') !== insTemp.config.id && tableView.attr('lay-id', insTemp.config.id);
 
-    var insObj = getIns(insTemp.config.id);
+    var insObj = getIns(insTemp.config.id); // 获得当前的table的实例，对实例内部的方法进行改造
+
     if (insObj && insObj.index) { // 只有经过table源码修改了才能继续进一步的改造
+
       // 暂时用这个什么时候数据成功与否都会调用的方法来打补丁(后面调优)
       var setColsWidth = insObj.setColsWidth;
 
@@ -209,6 +227,7 @@ layui.define(['table'], function (exports) {
         var that = this;
         loading.call(that, hide);
         if (!hide && that.layInit) {
+          that.layInit.remove();
           // 添加一个动画
           that.layInit.addClass('layui-anim layui-anim-rotate layui-anim-loop');
           if (!that.layMain.height()) {
@@ -216,20 +235,36 @@ layui.define(['table'], function (exports) {
             that.layBox.append($('<div class="' + LOADING + '" style="height: 56px;"></div>'));
           }
           var offsetHeight = 0;
-          if(that.layMain.height() - that.layMain.prop('clientHeight') > 0){
+          if (that.layMain.height() - that.layMain.prop('clientHeight') > 0) {
             // 如果出现滚动条，要减去滚动条的宽度
             offsetHeight = that.getScrollWidth();
           }
-          that.layInit.height(that.layBox.height() - that.layHeader.height() - offsetHeight).css('marginTop', that.layHeader.height()+'px');
+          that.layInit.height(that.layBox.height() - that.layHeader.height() - offsetHeight).css('marginTop', that.layHeader.height() + 'px');
+          that.layBox.append(that.layInit);
         }
       };
-      // 补充被初始化的时候设置宽度时候被关掉的loading
-      insObj.loading();
 
       insObj.setColsWidth = function () {
         var that = this;
         that.layBox.find('.' + LOADING).remove();
         setColsWidth.call(that);
+
+        var options = that.config;
+
+        //如果多级表头，重新填补填补表头高度
+        if (options.cols.length > 1) {
+          //补全高度
+          var th = that.layFixed.find(ELEM_HEADER).find('th');
+          // 只有有头部的高度的时候计算才有意义
+          var heightTemp = that.layHeader.height();
+          heightTemp = heightTemp / options.cols.length; // 每一个原子tr的高度
+          th.each(function (index, trCurr) {
+            trCurr = $(trCurr);
+            trCurr.height(heightTemp * (parseInt(trCurr.attr('rowspan') || 1))
+              - 1 - parseFloat(th.css('padding-top')) - parseFloat(th.css('padding-bottom')));
+          });
+        }
+
         if (that.elem.data('patch') !== true) {
           return;
         }
@@ -267,6 +302,9 @@ layui.define(['table'], function (exports) {
 
         that.renderForm('checkbox');
       };
+
+      // 补充被初始化的时候设置宽度时候被关掉的loading，如果是data模式的实际不会走异步的，所以不需要重新显示loading
+      insObj.config.url ? insObj.loading() : insObj.setColsWidth();
     }
 
 

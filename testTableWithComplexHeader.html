@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>layui</title>
+  <meta name="renderer" content="webkit">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+  <link rel="stylesheet" href="layui/src/css/layui.css" media="all">
+  <!-- 注意：如果你直接复制所有代码到本地，上述css路径需要改成你本地的 -->
+</head>
+<body>
+<table class="layui-table" id="demo" lay-data="{cellMinWidth: 130, height:530, limit:20, page:true, id:'idTest'}" lay-filter="demo">
+  <thead>
+  <tr>
+    <th lay-data="{type:'checkbox', field:'checkbox', fixed: true}" rowspan="4"></th>
+    <th lay-data="{align:'center',field:'id', fixed: true, colGroup: true}" rowspan="4">序号</th>
+    <th lay-data="{align:'center',field:'f2', fixed: true, colGroup: true}" rowspan="4">工程项目名称</th>
+    <th lay-data="{align:'center',field:'f3', fixed: true, colGroup: true}" rowspan="4">工程量</th>
+    <th lay-data="{align:'center',field:'f4', fixed: true}" rowspan="4">单位</th>
+    <th lay-data="{align:'center', fixed: true}" colspan="5" rowspan="2">自营项目价格(元)</th>
+    <th lay-data="{align:'center',field:'f5'}" rowspan="4">合计1</th>
+    <th lay-data="{align:'center'}" colspan="13">主材价格及参考消耗量</th>
+    <th lay-data="{align:'center'}">人工</th>
+    <th lay-data="{align:'center'}" colspan="4">机械</th>
+  </tr>
+  <tr>
+    <th lay-data="{align:'center'}">柴油(元/kg)</th>
+    <th lay-data="{align:'center'}">炸药(元/kg)</th>
+    <th lay-data="{align:'center'}">非电雷管(元/发)</th>
+    <th lay-data="{align:'center'}">铜片止水(元/kg)</th>
+    <th lay-data="{align:'center'}">高抗水泥(元/t)</th>
+    <th lay-data="{align:'center'}">水泥42.5(元/t)</th>
+    <th lay-data="{align:'center'}">粉煤灰(元/kg)</th>
+    <th lay-data="{align:'center'}">砂(元/m3)</th>
+    <th lay-data="{align:'center'}">石(元/m3)</th>
+    <th lay-data="{align:'center'}">水(元/m3)</th>
+    <th lay-data="{align:'center'}">外加剂(元/T)</th>
+    <th lay-data="{align:'center'}">沥青(元/kg)</th>
+    <th lay-data="{align:'center'}">钢筋(元/kg)</th>
+    <th lay-data="{align:'center'}">单价(元/工时)</th>
+    <th lay-data="{align:'center'}">Φ64～127</th>
+    <th lay-data="{align:'center'}">自卸汽车20</th>
+    <th lay-data="{align:'center'}">挖掘机液压2m³</th>
+    <th lay-data="{align:'center',field:'f6'}" rowspan="3">备注</th>
+  </tr>
+  <tr>
+    <th lay-data="{align:'center',field:'f7', fixed: true}" rowspan="2">主材</th>
+    <th lay-data="{align:'center',field:'f8', fixed: true}" rowspan="2">人工</th>
+    <th lay-data="{align:'center',field:'f9', fixed: true}" rowspan="2">机械</th>
+    <th lay-data="{align:'center',field:'f10', fixed: true}" rowspan="2">其他</th>
+    <th lay-data="{align:'center',field:'f11', fixed: true}" rowspan="2">合计2</th>
+    <th lay-data="{align:'center'}">7.5</th>
+    <th lay-data="{align:'center'}">18.415</th>
+    <th lay-data="{align:'center'}">10</th>
+    <th lay-data="{align:'center'}">65</th>
+    <th lay-data="{align:'center'}">850</th>
+    <th lay-data="{align:'center'}">560</th>
+    <th lay-data="{align:'center'}">0.48</th>
+    <th lay-data="{align:'center'}">66</th>
+    <th lay-data="{align:'center'}">50</th>
+    <th lay-data="{align:'center'}">1.2</th>
+    <th lay-data="{align:'center'}">6500</th>
+    <th lay-data="{align:'center'}">5.8</th>
+    <th lay-data="{align:'center'}">2.85</th>
+    <th lay-data="{align:'center'}">20</th>
+    <th lay-data="{align:'center'}">250</th>
+    <th lay-data="{align:'center'}">120</th>
+    <th lay-data="{align:'center'}">220</th>
+  </tr>
+  <tr>
+    <th lay-data="{align:'center',field:'f12'}">1耗量(kg)</th>
+    <th lay-data="{align:'center',field:'f13'}">2耗量(kg)</th>
+    <th lay-data="{align:'center',field:'f14'}">3耗量(发)</th>
+    <th lay-data="{align:'center',field:'f15'}">4耗量(kg)</th>
+    <th lay-data="{align:'center',field:'f16'}">5耗量(kg)</th>
+    <th lay-data="{align:'center',field:'f17'}">6耗量(kg)</th>
+    <th lay-data="{align:'center',field:'f18'}">7耗量(kg)</th>
+    <th lay-data="{align:'center',field:'f19'}">8耗量(m3)</th>
+    <th lay-data="{align:'center',field:'f20'}">9耗量(m3)</th>
+    <th lay-data="{align:'center',field:'f21'}">10耗量(m3)</th>
+    <th lay-data="{align:'center',field:'f22'}">11耗量(m3)</th>
+    <th lay-data="{align:'center',field:'f23'}">12耗量(m3)</th>
+    <th lay-data="{align:'center',field:'f24'}">13耗量(kg)</th>
+    <th lay-data="{align:'center',field:'f25'}">14数量(工时)</th>
+    <th lay-data="{align:'center',field:'f26'}">15台时</th>
+    <th lay-data="{align:'center',field:'f27'}">16台时</th>
+    <th lay-data="{align:'center',field:'f28'}">17台时</th>
+  </tr>
+  </thead>
+</table>
+<script src="layui/src/layui.js" charset="utf-8"></script>
+<script>
+  layui.config({base: 'layui/src/lay/plug/'}).use(['tablePlug'], function () {
+    var tablePlug = layui.tablePlug;
+    var table = layui.table;
+    table.init('demo', {
+      toolbar: true,
+      data: [{
+        id: 10001,
+        f2: 2,
+        f3: 3,
+        f4: 4,
+        f5: 5,
+        f6: 6,
+        f7: 7,
+        f8: 8,
+        f9: 9,
+        f10: 10,
+        f11: 11,
+        f12: 12,
+        f13: 13,
+        f14: 14,
+        f15: 15,
+        f16: 16,
+        f17: 17,
+        f18: 18,
+        f19: 19,
+        f20: 20,
+        f21: 21,
+        f22: 22,
+        f23: 23,
+        f24: 24,
+        f25: 25,
+        f26: 26,
+        f27: 27,
+        f28: 28
+      }, {
+        id: 10002,
+        f2: '工程项目名称',
+        f3: '工程量',
+        f4: '单位',
+        f5: '合计1',
+        f6: '备注',
+        f7: '主材',
+        f8: '人工',
+        f9: '机械',
+        f10: '其他',
+        f11: '合计2',
+        f12: '1耗量(kg)',
+        f13: '2耗量(kg)',
+        f14: '3耗量(发)',
+        f15: '4耗量(kg)',
+        f16: '5耗量(kg)',
+        f17: '6耗量(kg)',
+        f18: '7耗量(kg)',
+        f19: '8耗量(m3)',
+        f20: '9耗量(m3)',
+        f21: '10耗量(m3)',
+        f22: '11耗量(m3)',
+        f23: '12耗量(m3)',
+        f24: '13耗量(kg)',
+        f25: '14数量(工时)',
+        f26: '15台时',
+        f27: '16台时',
+        f28: '17台时'
+      }]
+    });
+  });
+</script>
+</body>
+</html>
