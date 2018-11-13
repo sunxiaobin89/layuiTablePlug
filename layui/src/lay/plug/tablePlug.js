@@ -27,6 +27,7 @@ layui.define(['table'], function (exports) {
     , LOADING = 'layui-tablePlug-loading-p'
     , ELEM_HEADER = '.layui-table-header'
     , COLGROUP = 'colGroup' // 定义一个变量，方便后面如果table内部有变化可以对应的修改一下即可
+    , tableSpacialColType = ['numbers', 'checkbox', 'radio'] // 表格的特殊类型字段
 
     // 检测是否满足智能重载的条件
     , checkSmartReloadCodition = (function () {
@@ -197,7 +198,7 @@ layui.define(['table'], function (exports) {
     if (config.cols.length > 1) {
       layui.each(config.cols, function (i1, item1) {
         layui.each(item1, function (i2, item2) {
-          if (!item2.field && !item2.toolbar && (!item2.colspan || item2.colspan===1)) {
+          if (!item2.field && !item2.toolbar && (!item2.colspan || item2.colspan===1) && (tableSpacialColType.indexOf(item2.type) === -1)) {
             item2[COLGROUP] = true;
           } else if (item2[COLGROUP] && !(item2.colspan > 1)) {
             // 如果有乱用colGroup的，明明是一个字段列还给它添加上这个属性的会在这里KO掉，叫我表格小卫士^_^
@@ -261,7 +262,7 @@ layui.define(['table'], function (exports) {
           th.each(function (index, trCurr) {
             trCurr = $(trCurr);
             trCurr.height(heightTemp * (parseInt(trCurr.attr('rowspan') || 1))
-              - 1 - parseFloat(th.css('padding-top')) - parseFloat(th.css('padding-bottom')));
+              - 1 - parseFloat(trCurr.css('padding-top')) - parseFloat(trCurr.css('padding-bottom')));
           });
         }
 
