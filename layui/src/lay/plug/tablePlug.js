@@ -31,7 +31,7 @@ layui.define(['table'], function (exports) {
 
     // 检测是否满足智能重载的条件
     , checkSmartReloadCodition = (function () {
-      return !!table.thisTable;
+      return !!(table.thisTable && table.Class);
     })()
     , getIns = function (id) {
       if (checkSmartReloadCodition) {
@@ -157,6 +157,212 @@ layui.define(['table'], function (exports) {
       }
     };
 
+  var sortTemp = table.Class.prototype.sort;
+  table.Class.prototype.sort = function () {
+    var that = this;
+    var params = [];
+    layui.each(arguments, function (index, param) {
+      params.push(param);
+    });
+    alert('KKK');
+    sortTemp.apply(that, params);
+  };
+
+  var loading = table.Class.prototype.loading;
+  table.Class.prototype.loading = function (hide) {
+    var that = this;
+    loading.call(that, hide);
+    if (!hide && that.layInit) {
+      that.layInit.remove();
+      // 添加一个动画
+      that.layInit.addClass('layui-anim layui-anim-rotate layui-anim-loop');
+      if (!that.layMain.height()) {
+        // 如果当前没有内容，添加一个空的div让它有显示的地方
+        that.layBox.append($('<div class="' + LOADING + '" style="height: 56px;"></div>'));
+      }
+      var offsetHeight = 0;
+      if (that.layMain.height() - that.layMain.prop('clientHeight') > 0) {
+        // 如果出现滚动条，要减去滚动条的宽度
+        offsetHeight = that.getScrollWidth();
+      }
+      that.layInit.height(that.layBox.height() - that.layHeader.height() - offsetHeight).css('marginTop', that.layHeader.height() + 'px');
+      that.layBox.append(that.layInit);
+    }
+  };
+
+  var setColsWidth = table.Class.prototype.setColsWidth;
+  table.Class.prototype.setColsWidth = function () {
+    var that = this;
+    that.layBox.find('.' + LOADING).remove();
+    setColsWidth.call(that);
+
+    var options = that.config;
+
+    //如果多级表头，重新填补填补表头高度
+    if (options.cols.length > 1) {
+      //补全高度
+      var th = that.layFixed.find(ELEM_HEADER).find('th');
+      // 只有有头部的高度的时候计算才有意义
+      var heightTemp = that.layHeader.height();
+      heightTemp = heightTemp / options.cols.length; // 每一个原子tr的高度
+      th.each(function (index, trCurr) {
+        trCurr = $(trCurr);
+        trCurr.height(heightTemp * (parseInt(trCurr.attr('rowspan') || 1))
+          - 1 - parseFloat(trCurr.css('padding-top')) - parseFloat(trCurr.css('padding-bottom')));
+      });
+    }
+
+    if (that.elem.data('patch') !== true) {
+      return;
+    }
+
+    // 调整过了之后也把状态重置一下
+    that.elem.data('patch', null);
+
+    // 打补丁
+    var noneElem = that.elem.find('.' + NONE);
+    if (noneElem.length) {
+      // 出现异常
+      that.layFixed.find('tbody').html('');
+      that.layFixed.addClass(HIDE);
+
+      var laymain = ['<table cellspacing="0" cellpadding="0" border="0" class="layui-table"><tbody></tbody></table>'];
+
+      var prevElem = noneElem.prev();
+      if (!prevElem || !prevElem.length) {
+        $(laymain.join('')).insertBefore(noneElem);
+      }
+      that.layTotal.addClass(HIDE);
+      that.layPage.addClass(HIDE);
+      that.layBox.find('input[lay-filter="layTableAllChoose"]').prop('checked', false);
+    } else {
+      var layPreELem = that.layFixed.prevObject;
+      if (!layPreELem.find(that.layFixed.selector).length) {
+        // 数据为空的时候会remove掉固定列的dom，正常了要加回来
+        that.layBox.append(that.layFixed);
+      }
+      // 出现异常的时候隐藏了，正常就显示回来
+      that.layFixLeft.removeClass(HIDE);
+      that.layTotal.removeClass(HIDE);
+      // that.layPage.removeClass(HIDE);
+    }
+
+    that.renderForm('checkbox');
+  };
+
+  //初始化一些参数
+  table.Class.prototype.setInit = function (type) {
+    var that = this
+      , options = that.config;
+
+    options.clientWidth = options.width || function () { //获取容器宽度
+      //如果父元素宽度为0（一般为隐藏元素），则继续查找上层元素，直到找到真实宽度为止
+      var getWidth = function (parent) {
+        var width, isNone;
+        parent = parent || options.elem.parent();
+        width = parent.width();
+        try {
+          isNone = parent.css('display') === 'none';
+        } catch (e) {
+        }
+        if (parent[0] && (!width || isNone)) return getWidth(parent.parent());
+        return width;
+      };
+      return getWidth();
+    }();
+
+    if (type === 'width') return options.clientWidth;
+
+    //初始化列参数
+    layui.each(options.cols, function (i1, item1) {
+      layui.each(item1, function (i2, item2) {
+
+        //如果列参数为空，则移除
+        if (!item2) {
+          item1.splice(i2, 1);
+          return;
+        }
+
+        item2.key = i1 + '-' + i2;
+        item2.hide = item2.hide || false;
+
+        //设置列的父列索引
+        //如果是组合列，则捕获对应的子列
+        if (item2.colGroup || item2.colspan > 1) {
+          var childIndex = 0;
+          layui.each(options.cols[i1 + (parseInt(item2.rowspan) || 1)], function (i22, item22) {
+            //如果子列已经被标注为{HAS_PARENT}，或者子列累计 colspan 数等于父列定义的 colspan，则跳出当前子列循环
+            if (item22.HAS_PARENT || (childIndex > 1 && childIndex == item2.colspan)) return;
+
+            item22.HAS_PARENT = true;
+            item22.parentKey = i1 + '-' + i2;
+
+            childIndex = childIndex + parseInt(item22.colspan > 1 ? item22.colspan : 1);
+          });
+          item2.colGroup = true; //标注是组合列
+        }
+
+        //根据列类型，定制化参数
+        that.initOpts(item2);
+      });
+    });
+  };
+
+  var tableInsReload = table.Class.prototype.reload;
+  //表格完整重载
+  table.Class.prototype.reload = function (options) {
+    var that = this;
+    table.reload(that.config.id, options, true);
+  };
+
+  //遍历表头
+  table.eachCols = function (id, callback, cols) {
+    var that = this;
+    var config = that.thisTable.config[id] || {}
+      , arrs = [], index = 0;
+
+    cols = $.extend(true, [], cols || config.cols);
+
+    //重新整理表头结构
+    layui.each(cols, function (i1, item1) {
+      layui.each(item1, function (i2, item2) {
+
+        //如果是组合列，则捕获对应的子列
+        if (item2.colGroup) {
+          var childIndex = 0;
+          index++
+          item2.CHILD_COLS = [];
+
+          // 找到它的子列
+          // layui.each(cols[i1 + 1], function(i22, item22){
+          layui.each(cols[i1 + (parseInt(item2.rowspan) || 1)], function (i22, item22) {
+            //如果子列已经被标注为{PARENT_COL_INDEX}，或者子列累计 colspan 数等于父列定义的 colspan，则跳出当前子列循环
+            if (item22.PARENT_COL_INDEX || (childIndex > 1 && childIndex == item2.colspan)) return;
+
+            item22.PARENT_COL_INDEX = index;
+
+            item2.CHILD_COLS.push(item22);
+            childIndex = childIndex + parseInt(item22.colspan > 1 ? item22.colspan : 1);
+          });
+        }
+
+        if (item2.PARENT_COL_INDEX) return; //如果是子列，则不进行追加，因为已经存储在父列中
+        arrs.push(item2)
+      });
+    });
+
+    //重新遍历列，如果有子列，则进入递归
+    var eachArrs = function (obj) {
+      layui.each(obj || arrs, function (i, item) {
+        if (item.CHILD_COLS) return eachArrs(item.CHILD_COLS);
+        typeof callback === 'function' && callback(i, item);
+      });
+    };
+
+    eachArrs();
+  };
+
+
   // 改造table.render和reload记录返回的对象
   var tableRender = table.render;
   table.render = function (config) {
@@ -198,7 +404,7 @@ layui.define(['table'], function (exports) {
     if (config.cols.length > 1) {
       layui.each(config.cols, function (i1, item1) {
         layui.each(item1, function (i2, item2) {
-          if (!item2.field && !item2.toolbar && (!item2.colspan || item2.colspan===1) && (tableSpacialColType.indexOf(item2.type) === -1)) {
+          if (!item2.field && !item2.toolbar && (!item2.colspan || item2.colspan === 1) && (tableSpacialColType.indexOf(item2.type) === -1)) {
             item2[COLGROUP] = true;
           } else if (item2[COLGROUP] && !(item2.colspan > 1)) {
             // 如果有乱用colGroup的，明明是一个字段列还给它添加上这个属性的会在这里KO掉，叫我表格小卫士^_^
@@ -216,98 +422,12 @@ layui.define(['table'], function (exports) {
     var insObj = getIns(insTemp.config.id); // 获得当前的table的实例，对实例内部的方法进行改造
 
     if (insObj && insObj.index) { // 只有经过table源码修改了才能继续进一步的改造
-
-      // 暂时用这个什么时候数据成功与否都会调用的方法来打补丁(后面调优)
-      var setColsWidth = insObj.setColsWidth;
-
       // 在render的时候就调整一下宽度，不要不显示或者拧成一团
-      setColsWidth.call(insObj);
-
-      var loading = insObj.loading;
-      insObj.loading = function (hide) {
-        var that = this;
-        loading.call(that, hide);
-        if (!hide && that.layInit) {
-          that.layInit.remove();
-          // 添加一个动画
-          that.layInit.addClass('layui-anim layui-anim-rotate layui-anim-loop');
-          if (!that.layMain.height()) {
-            // 如果当前没有内容，添加一个空的div让它有显示的地方
-            that.layBox.append($('<div class="' + LOADING + '" style="height: 56px;"></div>'));
-          }
-          var offsetHeight = 0;
-          if (that.layMain.height() - that.layMain.prop('clientHeight') > 0) {
-            // 如果出现滚动条，要减去滚动条的宽度
-            offsetHeight = that.getScrollWidth();
-          }
-          that.layInit.height(that.layBox.height() - that.layHeader.height() - offsetHeight).css('marginTop', that.layHeader.height() + 'px');
-          that.layBox.append(that.layInit);
-        }
-      };
-
-      insObj.setColsWidth = function () {
-        var that = this;
-        that.layBox.find('.' + LOADING).remove();
-        setColsWidth.call(that);
-
-        var options = that.config;
-
-        //如果多级表头，重新填补填补表头高度
-        if (options.cols.length > 1) {
-          //补全高度
-          var th = that.layFixed.find(ELEM_HEADER).find('th');
-          // 只有有头部的高度的时候计算才有意义
-          var heightTemp = that.layHeader.height();
-          heightTemp = heightTemp / options.cols.length; // 每一个原子tr的高度
-          th.each(function (index, trCurr) {
-            trCurr = $(trCurr);
-            trCurr.height(heightTemp * (parseInt(trCurr.attr('rowspan') || 1))
-              - 1 - parseFloat(trCurr.css('padding-top')) - parseFloat(trCurr.css('padding-bottom')));
-          });
-        }
-
-        if (that.elem.data('patch') !== true) {
-          return;
-        }
-
-        // 调整过了之后也把状态重置一下
-        that.elem.data('patch', null);
-
-        // 打补丁
-        var noneElem = tableView.find('.' + NONE);
-        if (noneElem.length) {
-          // 出现异常
-          that.layFixed.find('tbody').html('');
-          that.layFixed.addClass(HIDE);
-
-          var laymain = ['<table cellspacing="0" cellpadding="0" border="0" class="layui-table"><tbody></tbody></table>'];
-
-          var prevElem = noneElem.prev();
-          if (!prevElem || !prevElem.length) {
-            $(laymain.join('')).insertBefore(noneElem);
-          }
-          that.layTotal.addClass(HIDE);
-          that.layPage.addClass(HIDE);
-          that.layBox.find('input[lay-filter="layTableAllChoose"]').prop('checked', false);
-        } else {
-          var layPreELem = that.layFixed.prevObject;
-          if (!layPreELem.find(that.layFixed.selector).length) {
-            // 数据为空的时候会remove掉固定列的dom，正常了要加回来
-            that.layBox.append(that.layFixed);
-          }
-          // 出现异常的时候隐藏了，正常就显示回来
-          that.layFixLeft.removeClass(HIDE);
-          that.layTotal.removeClass(HIDE);
-          // that.layPage.removeClass(HIDE);
-        }
-
-        that.renderForm('checkbox');
-      };
+      insObj.setColsWidth();
 
       // 补充被初始化的时候设置宽度时候被关掉的loading，如果是data模式的实际不会走异步的，所以不需要重新显示loading
-      insObj.config.url ? insObj.loading() : insObj.setColsWidth();
+      insObj.config.url && insObj.loading();
     }
-
 
     return tabelIns[insTemp.config.id] = insTemp;
   };
@@ -360,16 +480,10 @@ layui.define(['table'], function (exports) {
     }
   })();
 
-  // 如何注册新的查询属性的例子
-  // queryParams.registParams('initSort', 'test1');
-  // console.log(queryParams.getParams());
-  // queryParams.registParams(['test1','test2','test3']);
-  // console.log(queryParams.getParams());
-
   // 添加两个目前tablePlug扩展的属性到查询模式白名单中
   queryParams.registParams('colFilterRecord', 'checkStatus', 'smartReloadModel');
 
-  table.reload = function (tableId, config) {
+  table.reload = function (tableId, config, shallowCopy) {
     var that = this;
 
     var configOld = getConfig(tableId);
@@ -407,7 +521,7 @@ layui.define(['table'], function (exports) {
             delete config.elem;
             delete config.jump;
           }
-          $.extend(true, insTemp.config, config);
+          insTemp.config = (shallowCopy ? $.extend({}, insTemp.config, config):$.extend(true, {}, insTemp.config, config));
           if (!insTemp.config.page) {
             insTemp.page = 1;
           }
@@ -421,15 +535,20 @@ layui.define(['table'], function (exports) {
     }
 
     // 如果是重载
-    var insTemp = tableReload.call(that, tableId, config);
-    return tabelIns[insTemp.config.id] = insTemp;
+    if (shallowCopy) {
+      // debugger;
+      tableInsReload.call(getIns(tableId), config);
+      tabelIns[tableId].config = getIns(tableId).config;
+    } else {
+      var insTemp = tableReload.call(that, tableId, config);
+      return tabelIns[tableId] = insTemp;
+    }
   };
 
   // 获得table的config
   var getConfig = function (tableId) {
     return tabelIns[tableId] && tabelIns[tableId].config;
   };
-
 
   // 原始的
   var checkStatus = table.checkStatus;
@@ -533,9 +652,11 @@ layui.define(['table'], function (exports) {
     , CHECK_TYPE_REMOVED: CHECK_TYPE_REMOVED
     , CHECK_TYPE_ORIGINAL: CHECK_TYPE_ORIGINAL
     , tableCheck: tableCheck
-    , getConfig: getConfig  // 表格复选列的方法封装
     , colFilterRecord: colFilterRecord  // 表格字段筛选记忆功能的封装
-    , getIns: getIns  // 获得某个表格的实例的封装
+    , getConfig: getConfig  // 表格复选列的方法封装
+    , getIns: function (tableId) { // 获得某个表格render返回的实例的封装
+      return tabelIns[tableId];
+    }
     , queryParams: queryParams // 表格查询模式的配置封装
     , smartReload: smartReload // 全局设置一个是否开启智能重载模式
 

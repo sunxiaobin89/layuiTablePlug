@@ -10,16 +10,16 @@
   <!-- 注意：如果你直接复制所有代码到本地，上述css路径需要改成你本地的 -->
 </head>
 <body>
-<table class="layui-table" id="demo" lay-data="{cellMinWidth: 130, height:530, limit:20, page:true, id:'idTest'}" lay-filter="demo">
+<table class="layui-table" id="demo" lay-data="{cellMinWidth: 130, height:530, limit:20, page:true}" lay-filter="demo">
   <thead>
   <tr>
     <th lay-data="{type:'checkbox', field:'checkbox', fixed: true}" rowspan="4"></th>
-    <th lay-data="{align:'center',field:'id', fixed: true, colGroup: true}" rowspan="4">序号</th>
+    <th lay-data="{align:'center',field:'id', fixed: true, colGroup: true, width: 80}" rowspan="4">序号</th>
     <th lay-data="{align:'center',field:'f2', fixed: true, colGroup: true}" rowspan="4">工程项目名称</th>
-    <th lay-data="{align:'center',field:'f3', fixed: true, colGroup: true}" rowspan="4">工程量</th>
-    <th lay-data="{align:'center',field:'f4', fixed: true}" rowspan="4">单位</th>
+    <th lay-data="{align:'center',field:'f3', fixed: true, colGroup: true, width: 80}" rowspan="4">工程量</th>
+    <th lay-data="{align:'center',field:'f4', fixed: true, width: 80}" rowspan="4">单位</th>
     <th lay-data="{align:'center', fixed: true}" colspan="5" rowspan="2">自营项目价格(元)</th>
-    <th lay-data="{align:'center',field:'f5'}" rowspan="4">合计1</th>
+    <th lay-data="{align:'center',field:'f5', width: 80}" rowspan="4">合计1</th>
     <th lay-data="{align:'center'}" colspan="13">主材价格及参考消耗量</th>
     <th lay-data="{align:'center'}">人工</th>
     <th lay-data="{align:'center'}" colspan="4">机械</th>
@@ -45,11 +45,11 @@
     <th lay-data="{align:'center',field:'f6'}" rowspan="3">备注</th>
   </tr>
   <tr>
-    <th lay-data="{align:'center',field:'f7', fixed: true}" rowspan="2">主材</th>
-    <th lay-data="{align:'center',field:'f8', fixed: true}" rowspan="2">人工</th>
-    <th lay-data="{align:'center',field:'f9', fixed: true}" rowspan="2">机械</th>
-    <th lay-data="{align:'center',field:'f10', fixed: true}" rowspan="2">其他</th>
-    <th lay-data="{align:'center',field:'f11', fixed: true}" rowspan="2">合计2</th>
+    <th lay-data="{align:'center',field:'f7', fixed: true, width: 80}" rowspan="2">主材</th>
+    <th lay-data="{align:'center',field:'f8', fixed: true, width: 80}" rowspan="2">人工</th>
+    <th lay-data="{align:'center',field:'f9', fixed: true, width: 80}" rowspan="2">机械</th>
+    <th lay-data="{align:'center',field:'f10', fixed: true, width: 80}" rowspan="2">其他</th>
+    <th lay-data="{align:'center',field:'f11', fixed: true, width: 80}" rowspan="2">合计2</th>
     <th lay-data="{align:'center'}">7.5</th>
     <th lay-data="{align:'center'}">18.415</th>
     <th lay-data="{align:'center'}">10</th>
@@ -154,8 +154,15 @@
         f26: '15台时',
         f27: '16台时',
         f28: '17台时'
-      }]
+      }],
+      done: function () {
+
+      }
     });
+
+    table.eachCols('demo', function (index, item) {
+      console.log(item.field, item.colGroup, item);
+    })
   });
 </script>
 </body>

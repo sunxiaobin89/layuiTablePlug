@@ -386,7 +386,7 @@ layui.define(['laytpl', 'laypage', 'layer', 'form', 'util'], function(exports){
         //如果是组合列，则捕获对应的子列
         if(item2.colGroup || item2.colspan > 1){
           var childIndex = 0;
-          layui.each(options.cols[i1 + (parseInt(item2.rowspan)||1)], function(i22, item22){
+          layui.each(options.cols[i1 + 1], function(i22, item22){
             //如果子列已经被标注为{HAS_PARENT}，或者子列累计 colspan 数等于父列定义的 colspan，则跳出当前子列循环
             if(item22.HAS_PARENT || (childIndex > 1 && childIndex == item2.colspan)) return;
             
@@ -1779,7 +1779,7 @@ layui.define(['laytpl', 'laypage', 'layer', 'form', 'util'], function(exports){
           item2.CHILD_COLS = [];
 
           // 找到它的子列
-          layui.each(cols[i1 + (parseInt(item2.rowspan)||1)], function(i22, item22){
+          layui.each(cols[i1 + 1], function(i22, item22){
             //如果子列已经被标注为{PARENT_COL_INDEX}，或者子列累计 colspan 数等于父列定义的 colspan，则跳出当前子列循环
             if(item22.PARENT_COL_INDEX || (childIndex > 1 && childIndex == item2.colspan)) return;
             
@@ -1915,9 +1915,10 @@ layui.define(['laytpl', 'laypage', 'layer', 'form', 'util'], function(exports){
     return data;
   };
 
-  // 把thisTable透漏出去，方便拓展
+  // 把thisTable和Class透漏出去，方便拓展
   table.thisTable = thisTable;
-  
+  table.Class = Class;
+
   //自动完成渲染
   table.init();
   

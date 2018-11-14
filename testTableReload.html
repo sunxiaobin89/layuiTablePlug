@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport"
         content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
-  <title>tablePlug</title>
+  <title>测试表格重载</title>
   <link rel="stylesheet" href="layui/src/css/layui.css" media="all">
   <style>
     body {
@@ -54,7 +54,8 @@
     <span class="layui-btn layui-btn-sm" lay-event="getChecked">获得选中的数据</span>
     <span class="layui-btn layui-btn-sm layui-btn-warm" lay-event="jump" data-page="1">第1页</span>
     <span class="layui-btn layui-btn-sm layui-btn-warm" lay-event="jump" data-page="2">第2页</span>
-    <span class="layui-btn layui-btn-sm layui-btn-primary" lay-event="reload">重载</span>
+    <span class="layui-btn layui-btn-sm layui-btn-primary" lay-event="reload">重载(table.reload)</span>
+    <span class="layui-btn layui-btn-sm layui-btn-primary" lay-event="reloadIns">另一种重载(tableIns.reload)</span>
   </div>
   <div class="layui-input-inline">
     <input name="name" class="layui-input">

@@ -91,11 +91,17 @@ layui.config({base: 'layui/src/lay/plug/'}).define(['tablePlug'], function (expo
         var options = {page: {curr: 1}};
         var urlTemp = btnElem.data('url');
         if (urlTemp) {
-          options.url = 'json/'+urlTemp+'.json';
+          options.url = 'json/' + urlTemp + '.json';
         }
-        var optionTemp = eval('(' + (btnElem.data('option')||'{}') + ')');
+        var optionTemp = eval('(' + (btnElem.data('option') || '{}') + ')');
 
         table.reload(config.id, $.extend(true, options, optionTemp));
+        break;
+      case 'reloadIns':
+        debugger;
+        tablePlug.getIns(config.id).reload({
+          page: false
+        });
         break;
     }
   });
