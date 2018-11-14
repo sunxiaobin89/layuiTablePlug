@@ -98,9 +98,8 @@ layui.config({base: 'layui/src/lay/plug/'}).define(['tablePlug'], function (expo
         table.reload(config.id, $.extend(true, options, optionTemp));
         break;
       case 'reloadIns':
-        debugger;
         tablePlug.getIns(config.id).reload({
-          page: false
+          // page: false
         });
         break;
     }
