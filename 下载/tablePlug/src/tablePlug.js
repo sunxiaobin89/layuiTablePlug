@@ -522,11 +522,7 @@ layui.define(['table'], function (exports) {
             delete config.jump;
           }
           // insTemp.config = (shallowCopy ? $.extend({}, insTemp.config, config):$.extend(true, {}, insTemp.config, config));
-          if (shallowCopy) {
-            $.extend(insTemp.config, config);
-          } else {
-            $.extend(true, insTemp.config, config);
-          }
+          shallowCopy ? $.extend(insTemp.config, config) : $.extend(true, insTemp.config, config);
           if (!insTemp.config.page) {
             insTemp.page = 1;
           }
