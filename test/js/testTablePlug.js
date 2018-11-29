@@ -8,6 +8,7 @@
 layui.config({base: 'layui/src/lay/plug/'}).define(['tablePlug'], function (exports) {
   "use strict";
 
+  layui.link('layui/src/css/plug/tablePlug.css', 'tablePlug');
 
   var $ = layui.$,
     form = layui.form,
@@ -101,6 +102,25 @@ layui.config({base: 'layui/src/lay/plug/'}).define(['tablePlug'], function (expo
         tablePlug.getIns(config.id).reload({
           // page: false
         });
+        break;
+      case 'setDisabled':
+        // tablePlug.tableCheck.disabled(config.id, [10003, 10004, 10010]);
+        // table.reload(tableId, {});
+        tablePlug.disabledCheck(tableId, [10003, 10004, 10010]);
+        break;
+      case 'setDisabledNull':
+        tablePlug.disabledCheck(tableId, false);
+        break;
+      case 'test':
+        var tableView = obj.config.elem.next();
+
+        // 方法一：清空缓存数据中的选中状态，然后把页面上的已经选中的节点的checked给去掉重新render一个form
+        layui.each(table.cache[tableId], function (index, item) {
+          item[table.config.checkName] = false;
+        });
+        tableView.find('input[name="layTableCheckbox"]:checked').prop('checked', false);
+        form.render('checkbox', tableView.attr('lay-filter'));
+
         break;
     }
   });
