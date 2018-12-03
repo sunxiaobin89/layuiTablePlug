@@ -46,7 +46,6 @@
     <span class="layui-btn layui-btn-sm layui-btn-primary" lay-event="reload">重载</span>
     <span class="layui-btn layui-btn-sm layui-btn-primary" lay-event="setDisabled">设置10003,10004,10010不可选</span>
     <span class="layui-btn layui-btn-sm layui-btn-primary" lay-event="setDisabledNull">取消不可选</span>
-    <span class="layui-btn layui-btn-sm layui-btn-primary" lay-event="test">测试清空选择</span>
   </div>
   <div class="layui-inline">
     <span><span style="color: red;">※</span>url模式测试用的是json文件所以翻页请用这里按钮，不要用table的中的laypage组件，实际开发中不会有这个问题</span>
@@ -92,7 +91,7 @@
       , checkDisabled: {
         enabled: true,
         primaryKey: 'id',
-        data: [10000,10001,10002,10003,10004,10005,10006,10007,10008,10009]
+        data: [10000, 10001, 10002, 10003, 10004, 10005, 10006, 10007, 10008, 10009]
       }
       , done: function () {
         var tableView = this.elem.next();
@@ -135,7 +134,7 @@
             type: 'toolbar',
             field: 'toolbar_common',
             title: '操作',
-            width: 190,
+            width: 168,
             align: 'center',
             toolbar: '#barDemo',
             rowspan: 2
@@ -150,22 +149,9 @@
           , {field: 'sign', title: '签名', width: 200}
           , {field: 'classify', title: '职业', width: 100}
           , {field: 'wealth', title: '财富', width: 135, sort: true, totalRow: true}
-
         ]
       ]
     });
-
-    // 监听编辑校验是否合适
-    table.on('edit(test)', function (obj) {
-      if (obj.field === 'score' && obj.value < 0) {
-        var valueOld = obj.tr.find('td[data-field="'+obj.field+'"]').first().text();
-        layer.msg('评分不能为负数！', {anim: 6});
-        setTimeout(function () {
-        //   obj.update({score: parseInt(0)});
-          obj.update({score: parseInt(valueOld)});
-        },0);
-      }
-    })
   });
 </script>
 </body>

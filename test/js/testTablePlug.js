@@ -111,17 +111,6 @@ layui.config({base: 'layui/src/lay/plug/'}).define(['tablePlug'], function (expo
       case 'setDisabledNull':
         tablePlug.disabledCheck(tableId, false);
         break;
-      case 'test':
-        var tableView = obj.config.elem.next();
-
-        // 方法一：清空缓存数据中的选中状态，然后把页面上的已经选中的节点的checked给去掉重新render一个form
-        layui.each(table.cache[tableId], function (index, item) {
-          item[table.config.checkName] = false;
-        });
-        tableView.find('input[name="layTableCheckbox"]:checked').prop('checked', false);
-        form.render('checkbox', tableView.attr('lay-filter'));
-
-        break;
     }
   });
 
@@ -130,7 +119,7 @@ layui.config({base: 'layui/src/lay/plug/'}).define(['tablePlug'], function (expo
     var data = obj.data //获得当前行数据
       , layEvent = obj.event; //获得 lay-event 对应的值
     if (layEvent === 'detail') {
-      layer.msg('查看操作');
+      layer.msg('查看操作(' + data.id + ')');
     } else if (layEvent === 'del') {
       layer.confirm('真的删除行么', function (index) {
         obj.del(); //删除对应行（tr）的DOM结构
@@ -138,7 +127,7 @@ layui.config({base: 'layui/src/lay/plug/'}).define(['tablePlug'], function (expo
         //向服务端发送删除指令
       });
     } else if (layEvent === 'edit') {
-      layer.msg('编辑操作');
+      layer.msg('编辑操作(' + data.id + ')');
     }
   });
 
