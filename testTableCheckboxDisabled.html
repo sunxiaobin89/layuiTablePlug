@@ -19,7 +19,7 @@
       <div class="layui-form-item">
         <label class="layui-form-label">是否跨页记录</label>
         <div class="layui-input-inline">
-          <input type="checkbox" name="status" lay-skin="switch" disabled checked="checked" lay-filter="statusSwitch">
+          <input type="checkbox" name="status" lay-skin="switch" checked="checked" lay-filter="statusSwitch">
         </div>
         <div class="layui-input-inline">
           <span class="layui-btn layui-btn-sm layui-btn-danger" onclick="resetCheckboxStatus(this)" data-id="demo">重置选中状态</span>
@@ -91,7 +91,7 @@
       , checkDisabled: {
         enabled: true,
         primaryKey: 'id',
-        data: [10000, 10001, 10002, 10003, 10004, 10005, 10006, 10007, 10008, 10009]
+        data: [10000, 10001, 10002, 10003, 10004, 10005, 10009]
       }
       , done: function () {
         var tableView = this.elem.next();
