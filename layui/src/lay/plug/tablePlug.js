@@ -195,15 +195,16 @@ layui.define(['table'], function (exports) {
 
   if (checkSmartReloadCodition) {
     // 只有改造了之后才能使用下面的方式去重写构造器里面的方法
-    var sortTemp = table.Class.prototype.sort;
-    table.Class.prototype.sort = function () {
-      var that = this;
-      var params = [];
-      layui.each(arguments, function (index, param) {
-        params.push(param);
-      });
-      sortTemp.apply(that, params);
-    };
+
+    // var sortTemp = table.Class.prototype.sort;
+    // table.Class.prototype.sort = function () {
+    //   var that = this;
+    //   var params = [];
+    //   layui.each(arguments, function (index, param) {
+    //     params.push(param);
+    //   });
+    //   sortTemp.apply(that, params);
+    // };
 
     var loading = table.Class.prototype.loading;
     table.Class.prototype.loading = function (hide) {
@@ -928,16 +929,8 @@ layui.define(['table'], function (exports) {
   // 缓存当前操作的是哪个表格的哪个tr的哪个td
   $(document).off('mousedown', '.layui-table-grid-down')
     .on('mousedown', '.layui-table-grid-down', function (event) {
-      var elem = $(this);
-      var tdElemKey = elem.closest('td').data('key');
-      var trElemIndex = elem.closest('tr').data('index');
-      // lay-id是2.4.5版本新增的一个逻辑，把当前表格实例的id绑定到这个视图的容器上，这个是一个非常非常实用的改变
-      var tableId = elem.closest('.layui-table-view').attr('lay-id');
-      table._tableTrCurr = {
-        tableId: tableId,
-        trIndex: trElemIndex,
-        tdKey: tdElemKey
-      };
+      // 记录操作的td的jquery对象
+      table._tableTrCurr = $(this).closest('td');
     });
 
   // 给弹出的详情里面的按钮添加监听级联的触发原始table的按钮的点击事件
@@ -951,12 +944,16 @@ layui.define(['table'], function (exports) {
       var layerIndex = elem.closest('.layui-table-tips').attr('times');
       // 关闭当前的这个显示更多的tip
       layer.close(layerIndex);
-      // 找到记录的当前操作的那个表的那个tr的那个td的辣个按钮
-      $('div.layui-table-view[lay-id="' + tableTrCurr.tableId + '"]')
-        .find('tr[data-index="' + tableTrCurr.trIndex + '"]')
-        .find('td[data-key="' + tableTrCurr.tdKey + '"]')
-        .find('[lay-event="' + elem.attr('lay-event') + '"]').first().click();
+      // 找到记录的当前操作的那个按钮
+      table._tableTrCurr.find('[lay-event="' + elem.attr('lay-event') + '"]').first().click();
     });
+
+  // 监听所有的table的sort
+  table.on('sort()', function (obj) {
+    var tableId = this.closest('.layui-table-view').attr('lay-id');
+    // 只有前台排序才需要同步不可选，后台排序用的是reload的方式最后会走done回调处理
+    getConfig(tableId).autoSort && disabledCheck(tableId);
+  });
 
   //外部接口
   var tablePlug = {

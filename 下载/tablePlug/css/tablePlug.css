@@ -1,10 +1,2 @@
-.layui-table-view .layui-disabled.layui-form-checkbox.layui-form-checked[lay-skin="primary"] i,
-.layui-table-view .layui-disabled.layui-form-checkbox[lay-skin="primary"] i {
-  background-color: lightgray !important;
-  color: #fff !important;
-}
-
-.layui-table-view .layui-disabled.layui-form-checkbox[lay-skin="primary"] i,
-.layui-table-view .layui-disabled.layui-form-checkbox[lay-skin="primary"] i:hover {
-  color: lightgray !important;
-}
+/** layui-v2.4.5 MIT License By https://www.layui.com */
+ .layui-table-view .layui-disabled.layui-form-checkbox.layui-form-checked[lay-skin=primary] i,.layui-table-view .layui-disabled.layui-form-checkbox.layui-form-checked[lay-skin=primary] i:hover,.layui-table-view .layui-disabled.layui-form-checkbox[lay-skin=primary] i{background-color:#d3d3d3!important;color:#fff!important}.layui-table-view .layui-disabled.layui-form-checkbox[lay-skin=primary] i,.layui-table-view .layui-disabled.layui-form-checkbox[lay-skin=primary] i:hover{color:#d3d3d3!important}
