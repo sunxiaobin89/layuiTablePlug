@@ -1,13 +1,11 @@
 .layui-table-view .layui-disabled.layui-form-checkbox.layui-form-checked[lay-skin="primary"] i,
-.layui-table-view .layui-disabled.layui-form-checkbox.layui-form-checked[lay-skin="primary"] i:hover,
-.layui-table-view .layui-disabled.layui-form-checkbox[lay-skin="primary"] i {
+.layui-table-view .layui-disabled.layui-form-checkbox.layui-form-checked[lay-skin="primary"] i:hover {
   background-color: lightgray !important;
   color: #fff !important;
 }
 
-
-
 .layui-table-view .layui-disabled.layui-form-checkbox[lay-skin="primary"] i,
 .layui-table-view .layui-disabled.layui-form-checkbox[lay-skin="primary"] i:hover {
+  background-color: lightgray !important;
   color: lightgray !important;
 }

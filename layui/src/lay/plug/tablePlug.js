@@ -149,12 +149,12 @@ layui.define(['table'], function (exports) {
     }
 
     // 针对表格中是否选中的数据处理
-    , dataRenderChecked = function (data, tableId) {
+    , dataRenderChecked = function (data, tableId, config) {
       if (!data || !tableId) {
         return;
       }
-      var config = getConfig(tableId);
-      if (!config.checkStatus) {
+      config = config || getConfig(tableId);
+      if (!config || !config.checkStatus) {
         return;
       }
       var nodeSelected = tableCheck.getChecked(tableId);
@@ -609,6 +609,11 @@ layui.define(['table'], function (exports) {
       config.parseData.plugFlag = true;
     }
 
+    // 如果是data模式
+    if (!config.url && isArray(config.data)) {
+      dataRenderChecked(config.data, tableId, settingTemp);
+    }
+
     // 改造done
     var doneFn = settingTemp.done;
     if (!doneFn || !doneFn.plugFlag) {
@@ -971,6 +976,7 @@ layui.define(['table'], function (exports) {
       tableCheck.disabled(tableId, data || []);
       disabledCheck.call(that, tableId, true);
     }
+    , dataRenderChecked: dataRenderChecked
     // , getObj: getIns  // 得到当前table的实际的实例
     , queryParams: queryParams // 表格查询模式的配置封装
     , smartReload: smartReload // 全局设置一个是否开启智能重载模式

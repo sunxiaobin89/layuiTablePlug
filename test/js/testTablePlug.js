@@ -75,7 +75,12 @@ layui.config({base: 'layui/src/lay/plug/'}).define(['tablePlug'], function (expo
     var tableId = config.id;
     switch (obj.event) {
       case 'getChecked':
-        layer.alert(JSON.stringify(table.checkStatus(tableId)));
+        layer.alert(JSON.stringify(table.checkStatus(tableId).data));
+        break;
+      case 'getCheckedStatus':
+        var status = table.checkStatus(tableId).status;
+        layer.alert('新增的：' + JSON.stringify(status[tablePlug.CHECK_TYPE_ADDITIONAL]) + '<br>'
+          + '删除的：' + JSON.stringify(status[tablePlug.CHECK_TYPE_REMOVED]));
         break;
       case 'deleteSome':
         // 获得当前选中的，不管它的状态是什么？只要是选中的都会获得
