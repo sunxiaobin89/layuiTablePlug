@@ -6,13 +6,27 @@
         content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
   <title>tablePlug</title>
   <link rel="stylesheet" href="layui/src/css/layui.css" media="all">
+  <link rel="stylesheet" href="layui/src/css/plug/icon/iconfont.css" media="all">
   <style>
     .layui-form-label {
       width: 100px;
     }
+
+    .layui-table-view tbody tr.layui-table-selected {
+      background-color: hotpink;
+    }
+
+    .layui-table-view tbody tr.layui-table-selected.layui-table-hover {
+      background-color: lightpink;
+    }
+
+    .layui-table-grid-down {
+      display: none;
+    }
   </style>
 </head>
 <body class="layui-container">
+<!--<body>-->
 <div class="layui-row layui-col-space10">
   <div class="layui-col-xs12" style="margin-top: 10px;">
     <div class="layui-form">
@@ -46,6 +60,7 @@
     <span class="layui-btn layui-btn-sm layui-btn-primary" lay-event="reload">重载</span>
     <span class="layui-btn layui-btn-sm layui-btn-primary" lay-event="setDisabled">设置10003,10004,10010不可选</span>
     <span class="layui-btn layui-btn-sm layui-btn-primary" lay-event="setDisabledNull">取消不可选</span>
+    <span class="layui-btn layui-btn-sm layui-btn-primary" lay-event="exportFile">导出数据</span>
   </div>
   <div class="layui-inline">
     <span><span style="color: red;">※</span>url模式测试用的是json文件所以翻页请用这里按钮，不要用table的中的laypage组件，实际开发中不会有这个问题</span>
@@ -53,6 +68,11 @@
 </script>
 
 <script src="layui/src/layui.js"></script>
+<!-- 让IE8/9支持媒体查询，从而兼容栅格 -->
+<!--[if lt IE 9]>
+<script src="https://cdn.staticfile.org/html5shiv/r29/html5.min.js"></script>
+<script src="https://cdn.staticfile.org/respond.js/1.4.2/respond.min.js"></script>
+<![endif]-->
 <script>
 
   layui.config({base: 'test/js/'}).use(['testTablePlug'], function () {
@@ -95,6 +115,7 @@
       }
       , done: function () {
         var tableView = this.elem.next();
+        tableView.find('.layui-table-grid-down').remove();
         var totalRow = tableView.find('.layui-table-total');
         var limit = this.page ? this.page.limit : this.limit;
         layui.each(totalRow.find('td'), function (index, tdElem) {
@@ -118,7 +139,7 @@
       , autoSort: false
       , initSort: {
         field: 'id' //排序字段，对应 cols 设定的各字段名
-        ,type: 'asc' //排序方式  asc: 升序、desc: 降序、null: 默认排序
+        , type: 'asc' //排序方式  asc: 升序、desc: 降序、null: 默认排序
       }
       , cols: [
         [
@@ -126,6 +147,7 @@
           {
             field: 'id',
             title: 'ID',
+            filter: true,
             width: 80,
             sort: true,
             fixed: 'left',
@@ -139,7 +161,7 @@
             type: 'toolbar',
             field: 'toolbar_common',
             title: '操作',
-            width: 168,
+            width: 90,
             align: 'center',
             toolbar: '#barDemo',
             rowspan: 2
@@ -147,19 +169,19 @@
         ]
         , [ //表头
           {field: 'username', title: '姓名', hideable: false}
-          , {field: 'sex', title: '性别', width: 90, sort: true}
+          , {field: 'sex', title: '性别', width: 90, filter: true, sort: true}
           , {field: 'experience', title: '积分', width: 90, sort: true, totalRow: true}
-          , {field: 'score', title: '评分', edit: true, width: 90, sort: true, totalRow: true}
+          , {field: 'score', title: '评分', edit: true, event: 'editField', width: 90, sort: true, totalRow: true}
           , {field: 'city', title: '城市', width: 150, templet: fn1('city')}
           , {field: 'sign', title: '签名', width: 200}
-          , {field: 'classify', title: '职业', width: 100}
-          , {field: 'wealth', title: '财富', width: 135, sort: true, totalRow: true}
+          , {field: 'classify', title: '职业',filter: true, width: 100}
+          , {field: 'wealth', title: '财富', width: 135,filter: true, type: 'wealth', sort: true, totalRow: true}
         ]
       ]
     });
 
     //监听排序事件
-    table.on('sort(test)', function(obj){ //注：tool是工具条事件名，test是table原始容器的属性 lay-filter="对应的值"
+    table.on('sort(test)', function (obj) { //注：tool是工具条事件名，test是table原始容器的属性 lay-filter="对应的值"
       // console.log(obj.field); //当前排序的字段名
       // console.log(obj.type); //当前排序类型：desc（降序）、asc（升序）、null（空对象，默认排序）
       // console.log(this); //当前排序的 th 对象
@@ -168,14 +190,42 @@
       //有些时候，你可能需要根据当前排序的字段，重新向服务端发送请求，从而实现服务端排序，如：
       table.reload('demo', {
         initSort: obj //记录初始排序，如果不设的话，将无法标记表头的排序状态。
-        ,where: { //请求参数（注意：这里面的参数可任意定义，并非下面固定的格式）
+        , where: { //请求参数（注意：这里面的参数可任意定义，并非下面固定的格式）
           field: obj.field //排序字段
-          ,order: obj.type //排序方式
+          , order: obj.type //排序方式
         }
       });
 
       // layer.msg('服务端排序。order by '+ obj.field + ' ' + obj.type);
     });
+
+    // 监听编辑如果评分负数给回滚到修改之前并且弹出提示信息并且重新获得焦点等待输入
+    table.on('edit(test)', function (obj) {
+      var tableId = obj.tr.closest('.layui-table-view').attr('lay-id');
+      var trIndex = obj.tr.data('index');
+      var that = this;
+      var tdElem = $(that).closest('td');
+
+      var field = obj.field;
+      var value = obj.value;
+      if (field === 'score') {
+        value = parseInt(value);
+        if (value < 0) {
+          setTimeout(function () {
+            // 小于0回滚再次获得焦点打开
+            obj.update({score: table._dataTemp[tableId][trIndex][field]});
+            layer.msg('评分不能为负数!', {anim: 6});
+            tdElem.click();
+          }, 100);
+        }
+      }
+    });
+
+    // 不写filter的话所有的表格点击都会触发可以用来处理一些通用的处理。
+    // table.on('row()', function (obj) {
+    //   var classSelectedName = 'layui-table-selected';
+    //   obj.tr.addClass(classSelectedName).siblings('tr').removeClass(classSelectedName);
+    // })
   });
 </script>
 </body>

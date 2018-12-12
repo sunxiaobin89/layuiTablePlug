@@ -18,6 +18,7 @@ layui.define(['table'], function (exports) {
     , table = layui.table
     , hint = layui.hint()
     , device = layui.device()
+    , tablePlug = {}
     , tabelIns = {}
     , CHECK_TYPE_ADDITIONAL = 'additional'  // 新增的
     , CHECK_TYPE_REMOVED = 'removed'  // 删除的
@@ -29,6 +30,12 @@ layui.define(['table'], function (exports) {
     , ELEM_HEADER = '.layui-table-header'
     , COLGROUP = 'colGroup' // 定义一个变量，方便后面如果table内部有变化可以对应的修改一下即可
     , tableSpacialColType = ['numbers', 'checkbox', 'radio'] // 表格的特殊类型字段
+    , LayuiTableColFilter = [
+      '<span class="layui-table-filter layui-inline">',
+      '<span class="layui-tablePlug-icon layui-tablePlug-icon-filter"></span>',
+      '</span>'
+    ]
+    , filterLayerIndex // 保存打开字段过滤的layer的index
 
     // 检测是否满足智能重载的条件
     , checkSmartReloadCodition = (function () {
@@ -192,6 +199,13 @@ layui.define(['table'], function (exports) {
       tableView.find('input[lay-filter="layTableAllChoose"]').prop('checked', table.checkStatus(tableId).isAll);
       form.render('checkbox', tableView.attr('lay-filter'));
     };
+
+  function getPosition(elem) {
+    return {
+      top: elem.offset().top - $('body').offset().top - $(document).scrollTop(),
+      left: elem.offset().left - $('body').offset().left - $(document).scrollLeft()
+    }
+  }
 
   if (checkSmartReloadCodition) {
     // 只有改造了之后才能使用下面的方式去重写构造器里面的方法
@@ -418,6 +432,11 @@ layui.define(['table'], function (exports) {
       var tableId = options.id;
       var tableView = that.elem;
 
+      var noneElem = tableView.find('.' + NONE);
+
+      // 如果没有数据的时候表头内容的宽度超过容器的宽度
+      that.elem[noneElem.length && that.layHeader.first().find('.layui-table').width() - 1 > that.layHeader.first().width() ? 'addClass' : 'removeClass']('layui-table-none-overflow');
+
       //如果多级表头，重新填补填补表头高度
       if (options.cols.length > 1) {
         //补全高度
@@ -432,39 +451,152 @@ layui.define(['table'], function (exports) {
         });
       }
 
-      // 看看是否需要打智能reload的补丁
-      if (tableView.data('patch') !== true) {
-        return;
-      }
+      // 字段过滤的相关功能
+      table.eachCols(tableId, function (index, item) {
+        if (item.type === 'normal') {
+          var field = item.field;
+          if (!field) {
+            return;
+          }
+          var thElem = tableView.find('th[data-field="' + field + '"]');
+          if (!item.filter) {
+            thElem.find('.layui-table-filter').remove();
+          } else {
+            if (!thElem.find('.layui-table-filter').length) {
+              $(LayuiTableColFilter.join('')).insertAfter(thElem.find('.layui-table-cell>span:not(.layui-inline)')).click(function (event) {
+                layui.stope(event);
+                var filterActive = tableView.find('.layui-table-filter.layui-active');
+                if (filterActive.length && filterActive[0] !== this) {
+                  // 目前只支持单列过滤，多列过滤会存在一些难题，不好统一，干脆只支持单列过滤
+                  filterActive.removeClass('layui-active');
+                  that.layBody.find('tr.' + HIDE).removeClass(HIDE);
+                }
+                var mainElem = tableView.find('.layui-table-main');
+                var nodes = [];
+                layui.each(mainElem.find('td[data-field="' + field + '"]'), function (index, elem) {
+                  elem = $(elem);
+                  var textTemp = elem.text();
+                  if (nodes.indexOf(textTemp) === -1) {
+                    nodes.push(textTemp);
+                  }
+                });
+                var layerWidth = 200;
+                var layerHeight = 300;
+                var btnElem = $(this);
+                var btnPosition = getPosition(btnElem);
+                var topTemp = btnPosition.top;
+                var leftTemp = btnPosition.left + btnElem.width();
+                if (leftTemp + layerWidth > $(document).width()) {
+                  leftTemp -= (layerWidth + btnElem.width());
+                }
+                filterLayerIndex = layer.open({
+                  content: '',
+                  title: null,
+                  type: 1,
+                  // area: [layerWidth + 'px', layerHeight + 'px'],
+                  area: layerWidth + 'px',
+                  shade: 0.1,
+                  closeBtn: 0,
+                  fixed: false,
+                  resize: false,
+                  shadeClose: true,
+                  offset: [topTemp + 'px', leftTemp + 'px'],
+                  isOutAnim: false,
+                  maxmin: false,
+                  success: function (layero, index) {
+                    layero.find('.layui-layer-content').html('<table id="layui-tablePlug-col-filter" lay-filter="layui-tablePlug-col-filter"></table>');
+                    table.render({
+                      elem: '#layui-tablePlug-col-filter',
+                      data: nodes.map(function (value, index1, array) {
+                        var nodeTemp = {
+                          name: value
+                        };
+                        nodeTemp[table.config.checkName] = !that.layBody.find('tr.' + HIDE).filter(function (index, item) {
+                          return $(item).find('td[data-field="' + field + '"]').text() === value;
+                        }).length;
+                        return nodeTemp;
+                      }),
+                      page: false,
+                      skin: 'nob',
+                      id: 'layui-tablePlug-col-filter-layer',
+                      even: false,
+                      height: nodes.length > 8 ? layerHeight : null,
+                      size: 'sm',
+                      style: 'margin: 0;',
 
-      // 调整过了之后也把状态重置一下
-      tableView.data('patch', null);
+                      cols: [[
+                        {type: 'checkbox', width: 40},
+                        {
+                          field: 'name',
+                          title: '全选<span class="table-filter-opt-invert" onclick="layui.tablePlug && layui.tablePlug.tableFilterInvert(this);">反选</span>'
+                        }
+                      ]]
+                    })
+                  },
+                  end: function () {
+                    btnElem[that.layBody.find('tr.' + HIDE).length ? 'addClass' : 'removeClass']('layui-active');
+                  }
+                });
 
-      // 打补丁
-      var noneElem = tableView.find('.' + NONE);
-      if (noneElem.length) {
-        // 出现异常
-        that.layFixed.find('tbody').html('');
-        that.layFixed.addClass(HIDE);
+                // 监听字段过滤的列选择的
+                table.on('checkbox(layui-tablePlug-col-filter)', function (obj) {
+                  if (obj.type === 'all') {
+                    that.layBody.find('tr')[obj.checked ? 'removeClass' : 'addClass'](HIDE);
+                  } else {
+                    layui.each(that.layBody.first().find('tr td[data-field="' + field + '"]'), function (index, elem) {
+                      elem = $(elem);
+                      if (elem.text() === obj.data.name) {
+                        var trElem = elem.parent();
+                        that.layBody.find('tr[data-index="' + trElem.data('index') + '"]')[obj.checked ? 'removeClass' : 'addClass'](HIDE);
+                      }
+                    });
+                  }
+                  that.resize();
+                });
 
-        var laymain = ['<table cellspacing="0" cellpadding="0" border="0" class="layui-table"><tbody></tbody></table>'];
-
-        var prevElem = noneElem.prev();
-        if (!prevElem || !prevElem.length) {
-          $(laymain.join('')).insertBefore(noneElem);
+              });
+            }
+          }
         }
-        that.layTotal.addClass(HIDE);
-        that.layPage.addClass(HIDE);
-      } else {
-        // 出现异常的时候隐藏了，正常就显示回来
-        that.layFixLeft.removeClass(HIDE);
-        that.layTotal.removeClass(HIDE);
-        that.layBody.scrollTop(0);
-        // that.layPage.removeClass(HIDE);
+      });
+
+      // 看看是否需要打智能reload的补丁
+      if (tableView.data('patch') === true) {
+        // 调整过了之后也把状态重置一下
+        tableView.data('patch', null);
+
+        // 打补丁
+        if (noneElem.length) {
+          // 出现异常
+          that.layFixed.find('tbody').html('');
+          that.layFixed.addClass(HIDE);
+
+          var laymain = ['<table cellspacing="0" cellpadding="0" border="0" class="layui-table"><tbody></tbody></table>'];
+
+          var prevElem = noneElem.prev();
+          if (!prevElem || !prevElem.length) {
+            $(laymain.join('')).insertBefore(noneElem);
+          }
+          that.layTotal.addClass(HIDE);
+          that.layPage.addClass(HIDE);
+        } else {
+          // 出现异常的时候隐藏了，正常就显示回来
+          that.layFixLeft.removeClass(HIDE);
+          that.layTotal.removeClass(HIDE);
+          // that.layPage.removeClass(HIDE);
+        }
+
+        that.renderForm('checkbox');
       }
 
-      that.renderForm('checkbox');
+      that.layBody.scrollTop(0);
+      that.layBody.scrollLeft(0);
+      that.layHeader.scrollLeft(0);
     };
+
+    $(window).resize(function () {
+      // layer.close(filterLayerIndex);
+    });
 
     //初始化一些参数
     table.Class.prototype.setInit = function (type) {
@@ -589,7 +721,7 @@ layui.define(['table'], function (exports) {
 
     if (!tableCheck.check(tableId)) {
       // 如果render的时候设置了checkStatus或者全局设置了默认跨页保存那么重置选中状态
-      tableCheck.init(tableId, settingTemp.checkStatus ? (settingTemp.checkStatus.default || []) : []);
+      tableCheck.init(tableId, settingTemp.checkStatus ? (settingTemp.checkStatus['default'] || []) : []);
     }
 
     if (settingTemp.checkDisabled && isArray(settingTemp.checkDisabled.data) && settingTemp.checkDisabled.data.length) {
@@ -960,8 +1092,7 @@ layui.define(['table'], function (exports) {
     getConfig(tableId).autoSort && disabledCheck(tableId);
   });
 
-  //外部接口
-  var tablePlug = {
+  $.extend(tablePlug, {
     CHECK_TYPE_ADDITIONAL: CHECK_TYPE_ADDITIONAL
     , CHECK_TYPE_REMOVED: CHECK_TYPE_REMOVED
     , CHECK_TYPE_ORIGINAL: CHECK_TYPE_ORIGINAL
@@ -980,8 +1111,32 @@ layui.define(['table'], function (exports) {
     // , getObj: getIns  // 得到当前table的实际的实例
     , queryParams: queryParams // 表格查询模式的配置封装
     , smartReload: smartReload // 全局设置一个是否开启智能重载模式
-  };
+    // 反选
+    , tableFilterInvert: function (elem) {
+      elem = $(elem);
+      var tableView = elem.closest('.layui-table-view'),
+        tableId = tableView.attr('lay-id');
+      if (!tableId){
+        return;
+      }
+      var checkStatus = table.checkStatus(tableId);
+      if (checkStatus.isAll) {
+        // 以前全选了反选既为全不选，直接点击一下全选这个复选框就可以了
+        tableView.find('[lay-filter="layTableAllChoose"]+').click();
+      } else {
+        if (!tableView.find('tbody [name="layTableCheckbox"]:checked').length) {
+          // 如果一个都没有选中也是直接点击全选按钮
+          tableView.find('[lay-filter="layTableAllChoose"]+').click();
+        } else {
+          layui.each(tableView.find('tbody [name="layTableCheckbox"]'), function (index, item) {
+            $(item).next().click();
+          });
+        }
+      }
+    }
+  });
 
+  //外部接口
   exports('tablePlug', tablePlug);
 });
 

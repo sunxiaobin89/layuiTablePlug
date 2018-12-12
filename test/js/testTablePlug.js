@@ -116,13 +116,20 @@ layui.config({base: 'layui/src/lay/plug/'}).define(['tablePlug'], function (expo
       case 'setDisabledNull':
         tablePlug.disabledCheck(tableId, false);
         break;
+      case 'exportFile':
+        config.title = '用户信息表';
+        table.exportFile(tableId, [{id: 1}]);
+        break;
     }
   });
 
   //监听行工具事件
   table.on('tool(test)', function (obj) { //注：tool 是工具条事件名，test 是 table 原始容器的属性 lay-filter="对应的值"
     var data = obj.data //获得当前行数据
-      , layEvent = obj.event; //获得 lay-event 对应的值
+      , layEvent = obj.event //获得 lay-event 对应的值
+      , tableId = obj.tr.closest('.layui-table-view').attr('lay-id')
+      , trIndex = obj.tr.data('index');
+
     if (layEvent === 'detail') {
       layer.msg('查看操作(' + data.id + ')');
     } else if (layEvent === 'del') {
@@ -130,9 +137,34 @@ layui.config({base: 'layui/src/lay/plug/'}).define(['tablePlug'], function (expo
         obj.del(); //删除对应行（tr）的DOM结构
         layer.close(index);
         //向服务端发送删除指令
+        if (!table.cache[tableId].filter(function (value) {
+          return value.id;
+        }).length) {
+          var configTemp = tablePlug.getConfig(tableId);
+          if (configTemp.page && configTemp.page.curr > 1) {
+            table.reload(tableId, {
+              page: {
+                curr: configTemp.page.curr - 1
+              }
+            })
+          }
+        }
       });
     } else if (layEvent === 'edit') {
       layer.msg('编辑操作(' + data.id + ')');
+    } else if (layEvent === 'editField') {
+      // 编辑字段，先把原始的值保存起来，后面校验失败的时候如果要回滚可以用到，
+      var field = $(this).data('field');
+      if (!field) {
+        return;
+      }
+      if (!data[field] && data[field] !== 0) {
+        data[field] = '';
+      }
+
+      table._dataTemp = table._dataTemp || {};
+      table._dataTemp[tableId] = table._dataTemp[tableId] || {};
+      table._dataTemp[tableId][trIndex] = data;
     }
   });
 
