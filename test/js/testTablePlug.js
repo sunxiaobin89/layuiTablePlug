@@ -5,10 +5,12 @@
  @License：MIT
 
  */
-layui.config({base: 'layui/src/lay/plug/'}).define(['tablePlug'], function (exports) {
+layui.config({base: 'layui/plug/'})
+// layui.config({base: '下载/tablePlug/'})
+//   .extend({tablePlug: 'tablePlug.min'})
+  .extend({tablePlug: 'tablePlug/tablePlug'})
+  .define(['tablePlug'], function (exports) {
   "use strict";
-
-  layui.link('layui/src/css/plug/tablePlug.css', 'tablePlug');
 
   var $ = layui.$,
     form = layui.form,
@@ -116,9 +118,8 @@ layui.config({base: 'layui/src/lay/plug/'}).define(['tablePlug'], function (expo
       case 'setDisabledNull':
         tablePlug.disabledCheck(tableId, false);
         break;
-      case 'exportFile':
-        config.title = '用户信息表';
-        table.exportFile(tableId, [{id: 1}]);
+      case 'ranksConversion':
+        // 表格行列转换
         break;
     }
   });
@@ -127,8 +128,9 @@ layui.config({base: 'layui/src/lay/plug/'}).define(['tablePlug'], function (expo
   table.on('tool(test)', function (obj) { //注：tool 是工具条事件名，test 是 table 原始容器的属性 lay-filter="对应的值"
     var data = obj.data //获得当前行数据
       , layEvent = obj.event //获得 lay-event 对应的值
-      , tableId = obj.tr.closest('.layui-table-view').attr('lay-id')
-      , trIndex = obj.tr.data('index');
+      , trCurr = obj.tr
+      , tableId = trCurr.closest('.layui-table-view').attr('lay-id')
+      , trIndex = trCurr.data('index');
 
     if (layEvent === 'detail') {
       layer.msg('查看操作(' + data.id + ')');
@@ -165,6 +167,30 @@ layui.config({base: 'layui/src/lay/plug/'}).define(['tablePlug'], function (expo
       table._dataTemp = table._dataTemp || {};
       table._dataTemp[tableId] = table._dataTemp[tableId] || {};
       table._dataTemp[tableId][trIndex] = data;
+    } else if (layEvent === 'moveUp') {
+      // debugger;
+      var trPrev = trCurr.prev();
+      if (!trPrev.length) {
+        layer.msg('已经是第一个节点了', {time: 1000, anim: 6});
+        return;
+      }
+      layui.each(trCurr, function (index, elem) {
+        elem = $(elem);
+        // 将节点移动到上一个位置去
+        elem.insertBefore(elem.prev());
+      });
+
+      var indexPrev = trPrev.data('index');
+      var numbersCurr = trCurr.find('.laytable-cell-numbers');
+      if (numbersCurr.length) {
+        // debugger;
+        // 存在序号列
+        numbersCurr = numbersCurr.first().text();
+        var numberPrev = trPrev.find('.laytable-cell-numbers').first().text();
+        trCurr.find('div.layui-table-cell.laytable-cell-numbers').html(numberPrev);
+        trPrev.find('div.layui-table-cell.laytable-cell-numbers').html(numbersCurr);
+      }
+
     }
   });
 

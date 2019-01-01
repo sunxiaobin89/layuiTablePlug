@@ -59,6 +59,8 @@ var argv = require('minimist')(process.argv.slice(2), {
       ,'!./src/lay/**/mobile.js'
       ,'!./src/lay/all.js'
       ,'!./src/lay/all-mobile.js'
+      ,'./plug/**/*'+ mod +'.js'
+      ,'!./plug/tablePlug/icon/*.js'
     ]
     ,dir = destDir(ver);
     

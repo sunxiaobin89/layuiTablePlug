@@ -9,6 +9,9 @@
 layui.define(['table'], function (exports) {
   "use strict";
 
+  layui.link(layui.cache.modules.tablePlug.substr(0, layui.cache.modules.tablePlug.lastIndexOf('/')) + '/tablePlug.css'); // 引入tablePlug.css
+  layui.link(layui.cache.modules.tablePlug.substr(0, layui.cache.modules.tablePlug.lastIndexOf('/')) + '/icon/iconfont.css'); // 引入图标文件
+
   var $ = layui.$
     , laytpl = layui.laytpl
     , laypage = layui.laypage
@@ -166,7 +169,7 @@ layui.define(['table'], function (exports) {
       }
       var nodeSelected = tableCheck.getChecked(tableId);
       for (var i = 0; i < data.length; i++) {
-        data[i][table.config.checkName] = nodeSelected.indexOf(data[i].id) !== -1;
+        data[i][table.config.checkName] = nodeSelected.indexOf(data[i][config.checkStatus.primaryKey || 'id']) !== -1;
       }
     }
 
@@ -199,6 +202,35 @@ layui.define(['table'], function (exports) {
       tableView.find('input[lay-filter="layTableAllChoose"]').prop('checked', table.checkStatus(tableId).isAll);
       form.render('checkbox', tableView.attr('lay-filter'));
     };
+
+  // 对table的全局config进行深拷贝
+  tablePlug.set = function (config) {
+    $.extend(true, table.config, config || {});
+  };
+
+  // 为啥要自己定义一个set去更新table.config而不用table.set？
+  // 因为table.set实际是非深拷贝，然后我这里期待的是一个可以根据需要后面根据开发者需要去丰富pageLanguageText的内容的而不是set的时候需要把plug里面写的初始的也全部写上
+  tablePlug.set({
+    pageLanguageText: {
+      // 自定义table的page组件中的多语言支持，实际这个完全可以自己定义，想要显示的文字，但是建议实用为主，真的需要再去定义
+      en: {
+        jumpTo: 'jump to', // 到第
+        page: 'page', // 页
+        go: 'go', // 确定
+        total: 'total', // 共
+        unit: '', // 条（单位，一般也可以不填）
+        optionText: 'limit each page' // 条/页
+      }
+      // 定义中文简写的, (如果需要的话，建议不改，按照原来的就行)
+      // 'zh-CN': {
+      //
+      // }
+      // 比如定义中文繁体
+      // 'zh-TW': {
+      //
+      // }
+    }
+  });
 
   function getPosition(elem) {
     return {
@@ -411,9 +443,53 @@ layui.define(['table'], function (exports) {
               //而并非用的是 options.page 中的参数（以确保分页未开启的情况仍能正常使用）
               that.page = obj.curr; //更新页码
               options.limit = obj.limit; //更新每页条数
-
               that.loading();
               that.pullData(obj.curr);
+            }
+            if (that.config.pageLanguage && !(that.config.pageLanguage === true)) {
+              var pageLanguageText;
+              if (typeof that.config.pageLanguage === 'string') {
+                if (!table.config.pageLanguageText[that.config.pageLanguage]) {
+                  console.log('找不到' + that.config.pageLanguage + '对应的语言文本定义');
+                  return;
+                }
+                pageLanguageText = table.config.pageLanguageText[that.config.pageLanguage];
+              } else if (typeof that.config.pageLanguage === 'object') {
+                var lanTemp = that.config.pageLanguage.lan;
+                if (!lanTemp) {
+                  return;
+                }
+                pageLanguageText = $.extend({}, table.config.pageLanguageText[lanTemp], that.config.pageLanguage.text || {});
+              } else {
+                return;
+              }
+
+              if (!pageLanguageText) {
+                return;
+              }
+
+              // 处理page支持en
+              var pageElem = that.layPage.find('>div');
+              pageElem.addClass(HIDE);
+              var skipElem = pageElem.find('.layui-laypage-skip');
+              var skipInput = skipElem.find('input');
+              var skipBtn = skipElem.find('button');
+              skipElem.html(pageLanguageText['jumpTo'] || 'jump to');
+              skipInput.appendTo(skipElem);
+              skipElem.append(pageLanguageText['page'] || 'page');
+              skipBtn.html(pageLanguageText['go'] || 'go').appendTo(skipElem);
+
+              var countElem = pageElem.find('.layui-laypage-count');
+              var countText = countElem.text();
+              countElem.html((pageLanguageText['total'] || 'total') + ' ' + countText.split(' ')[1] + (pageLanguageText['unit'] ? ' ' + pageLanguageText['unit'] : ''));
+
+              var limitsElem = pageElem.find('.layui-laypage-limits');
+              layui.each(limitsElem.find('option'), function (index, optionElem) {
+                optionElem = $(optionElem);
+                var textTemp = optionElem.text();
+                optionElem.html(textTemp.split(' ')[0] + ' ' + (pageLanguageText['optionText'] || 'limit each page'));
+              });
+              pageElem.removeClass(HIDE);
             }
           }
         }, options.page);
@@ -1116,7 +1192,7 @@ layui.define(['table'], function (exports) {
       elem = $(elem);
       var tableView = elem.closest('.layui-table-view'),
         tableId = tableView.attr('lay-id');
-      if (!tableId){
+      if (!tableId) {
         return;
       }
       var checkStatus = table.checkStatus(tableId);

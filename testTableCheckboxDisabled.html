@@ -6,7 +6,6 @@
         content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
   <title>tablePlug</title>
   <link rel="stylesheet" href="layui/src/css/layui.css" media="all">
-  <link rel="stylesheet" href="layui/src/css/plug/icon/iconfont.css" media="all">
   <style>
     .layui-form-label {
       width: 100px;
@@ -18,10 +17,6 @@
 
     .layui-table-view tbody tr.layui-table-selected.layui-table-hover {
       background-color: lightpink;
-    }
-
-    .layui-table-grid-down {
-      display: none;
     }
   </style>
 </head>
@@ -40,7 +35,7 @@
         </div>
       </div>
     </div>
-    <table class="layui-hide" id="demo" lay-filter="test"></table>
+    <div id="demo" lay-filter="test"></div>
   </div>
 </div>
 
@@ -48,6 +43,10 @@
   <a class="layui-btn layui-btn-primary layui-btn-xs" lay-event="detail">查看</a>
   <a class="layui-btn layui-btn-xs" lay-event="edit">编辑</a>
   <a class="layui-btn layui-btn-danger layui-btn-xs" lay-event="del">删除</a>
+</script>
+<script type="text/html" id="moveBar">
+  <a class="layui-btn layui-btn-xs" lay-event="moveUp"><i class="layui-icon layui-icon-up"></i>上移</a>
+  <a class="layui-btn layui-btn-warm layui-btn-xs" lay-event="moveDown"><i class="layui-icon layui-icon-down"></i>下移</a>
 </script>
 
 <script type="text/html" id="toolbarDemo">
@@ -60,7 +59,7 @@
     <span class="layui-btn layui-btn-sm layui-btn-primary" lay-event="reload">重载</span>
     <span class="layui-btn layui-btn-sm layui-btn-primary" lay-event="setDisabled">设置10003,10004,10010不可选</span>
     <span class="layui-btn layui-btn-sm layui-btn-primary" lay-event="setDisabledNull">取消不可选</span>
-    <span class="layui-btn layui-btn-sm layui-btn-primary" lay-event="exportFile">导出数据</span>
+    <!--<span class="layui-btn layui-btn-sm layui-btn-primary" lay-event="ranksConversion">行列转换</span>-->
   </div>
   <div class="layui-inline">
     <span><span style="color: red;">※</span>url模式测试用的是json文件所以翻页请用这里按钮，不要用table的中的laypage组件，实际开发中不会有这个问题</span>
@@ -92,6 +91,24 @@
       };
     };
 
+    var laytpl = layui.laytpl;
+    var tplTemp = '你好！ <%d.name%>';
+
+    var layuiTpl = function (template, data, callback, open, close) {
+      laytpl.config({
+        open: open || '{{',
+        close: close || '}}'
+      });
+      var htmlTemp = laytpl(template).render(data, callback);
+      laytpl.config({
+        open: '{{',
+        close: '}}'
+      });
+      return htmlTemp;
+    };
+
+    layer.msg(layuiTpl(tplTemp, {name: 'Layui'}, null, '<%', '%>'));
+
     table.render({
       elem: '#demo'
       // , height: 'full-200'
@@ -113,8 +130,25 @@
         primaryKey: 'id',
         data: [10000, 10001, 10002, 10003, 10004, 10005, 10009]
       }
+      // , pageLanguage: 'zh-TW' // 需要自己定义对应的文本
+      // , pageLanguage: 'en' // tablePlug里面已经定义了，如果觉得不满意可以用tablePlug.set去更新默认的配置;
+      // , pageLanguage: true // 无效的设置方式，只支持字符串或者对象的
+      // 也可以针对某个表格有特殊的配置如下面对象的设置方法,但是如果没有必要单独的自定义建议使用直接赋值成语言名称的字符串形式
+      , pageLanguage: {
+        lan: 'en',
+        // 可自定义text,lan为en的情况下
+        text: {
+          // jumpTo: 'jump to', // 到第
+          // page: 'page', // 页
+          // go: 'go', // 确定
+          // total: 'total', // 共
+          unit: 'item' // 条（单位，一般也可以不填）
+          // optionText: 'limit each page' // 条/页
+        }
+      }
       , done: function () {
         var tableView = this.elem.next();
+
         tableView.find('.layui-table-grid-down').remove();
         var totalRow = tableView.find('.layui-table-total');
         var limit = this.page ? this.page.limit : this.limit;
@@ -144,6 +178,7 @@
       , cols: [
         [
           {type: 'checkbox', fixed: 'left', rowspan: 2},
+          {type: 'numbers', fixed: 'left', rowspan: 2},
           {
             field: 'id',
             title: 'ID',
@@ -156,6 +191,16 @@
           },
           {title: '基本信息', colspan: 2, align: 'center'},
           {title: '详细信息', colspan: 6, align: 'center'},
+          {
+            fixed: 'right',
+            type: 'toolbar',
+            field: 'toolbar_move',
+            title: '',
+            width: 150,
+            align: 'center',
+            toolbar: '#moveBar',
+            rowspan: 2
+          },
           {
             fixed: 'right',
             type: 'toolbar',
@@ -174,8 +219,8 @@
           , {field: 'score', title: '评分', edit: true, event: 'editField', width: 90, sort: true, totalRow: true}
           , {field: 'city', title: '城市', width: 150, templet: fn1('city')}
           , {field: 'sign', title: '签名', width: 200}
-          , {field: 'classify', title: '职业',filter: true, width: 100}
-          , {field: 'wealth', title: '财富', width: 135,filter: true, type: 'wealth', sort: true, totalRow: true}
+          , {field: 'classify', title: '职业', filter: true, width: 100}
+          , {field: 'wealth', title: '财富', width: 135, filter: true, type: 'wealth', sort: true, totalRow: true}
         ]
       ]
     });
@@ -227,6 +272,7 @@
     //   obj.tr.addClass(classSelectedName).siblings('tr').removeClass(classSelectedName);
     // })
   });
+
 </script>
 </body>
 </html>
