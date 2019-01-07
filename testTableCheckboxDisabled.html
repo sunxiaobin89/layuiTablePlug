@@ -82,15 +82,13 @@
 <script>
 
   layui.config({base: 'test/js/'})
-    .use(['sun.hello', 'testTablePlug'], function () {
+    .use(['testTablePlug'], function () {
 
       var $ = layui.jquery
         , layer = layui.layer //弹层
         , form = layui.form //弹层
         , table = layui.table //表格
         , tablePlug = layui.tablePlug; //表格插件
-
-      var sunHello = layui['sun.hello'];
 
       // 当前这个测试页面测试的重点不是智能重载，所以关掉该功能，实际上该功能也是默认关闭的，可以不执行下面这句代码，也可以强制指定。
       tablePlug.smartReload.enable(true);
