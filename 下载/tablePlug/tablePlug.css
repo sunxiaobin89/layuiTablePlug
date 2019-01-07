@@ -38,3 +38,15 @@
   cursor: pointer;
   float: right;
 }
+
+.LAY_TABLE_TOOL_COLS_Invert_Selection {
+  position: absolute;
+  right: 10px;
+  padding: 0 6px;
+  cursor: pointer;
+  color: #666;
+}
+
+.layui-table-select dl {
+  top: 0;
+}

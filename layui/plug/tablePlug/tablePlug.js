@@ -1168,6 +1168,108 @@ layui.define(['table'], function (exports) {
     getConfig(tableId).autoSort && disabledCheck(tableId);
   });
 
+  // 监听统一的toolbar一般用来处理通用的
+  table.on('toolbar()', function (obj) {
+    var config = obj.config;
+    var btnElem = $(this);
+    var tableId = config.id;
+    var tableView = config.elem.next();
+    switch (obj.event) {
+      case 'LAYTABLE_COLS':
+        // 给筛选列添加全选还有反选的功能
+        var panelElem = btnElem.find('.layui-table-tool-panel');
+        var checkboxElem = panelElem.find('[lay-filter="LAY_TABLE_TOOL_COLS"]');
+        var checkboxCheckedElem = panelElem.find('[lay-filter="LAY_TABLE_TOOL_COLS"]:checked');
+        $('<li class="layui-form" lay-filter="LAY_TABLE_TOOL_COLS_FORM">' +
+          '<input type="checkbox" lay-skin="primary" lay-filter="LAY_TABLE_TOOL_COLS_ALL" '
+          + ((checkboxElem.length === checkboxCheckedElem.length) ? 'checked' : '') + ' title="全选">' +
+          '<span class="LAY_TABLE_TOOL_COLS_Invert_Selection">反选</span></li>')
+          .insertBefore(panelElem.find('li').first())
+          .on('click', '.LAY_TABLE_TOOL_COLS_Invert_Selection', function (event) {
+            layui.stope(event);
+            // 反选逻辑
+            panelElem.find('[lay-filter="LAY_TABLE_TOOL_COLS"]+').click();
+          });
+        form.render('checkbox', 'LAY_TABLE_TOOL_COLS_FORM');
+        break;
+    }
+  });
+
+  // 监听筛选列panel中的全选
+  form.on('checkbox(LAY_TABLE_TOOL_COLS_ALL)', function (obj) {
+    $(obj.elem).closest('ul')
+      .find('[lay-filter="LAY_TABLE_TOOL_COLS"]' + (obj.elem.checked ? ':not(:checked)' : ':checked') + '+').click();
+  });
+
+  // 监听筛选列panel中的单个记录的change
+  $(document).on('change', 'input[lay-filter="LAY_TABLE_TOOL_COLS"]', function (event) {
+    var elemCurr = $(this);
+    // 筛选列单个点击的时候同步全选的状态
+    $('input[lay-filter="LAY_TABLE_TOOL_COLS_ALL"]')
+      .prop('checked',
+        elemCurr.prop('checked') ? (!$('input[lay-filter="LAY_TABLE_TOOL_COLS"]').not(':checked').length) : false);
+    form.render('checkbox', 'LAY_TABLE_TOOL_COLS_FORM');
+  });
+
+  // 记录弹窗的index的变量
+  layer._indexTemp = layer._indexTemp || {};
+  $(document).on('click', '.layui-table-view .layui-select-title', function (event) {
+    layui.stope(event);
+    var titleElem = $(this);
+    var dlElem = titleElem.next();
+
+    var titleElemPosition = getPosition(titleElem);
+    var topTemp = titleElemPosition.top + titleElem.outerHeight();
+    var leftTemp = titleElemPosition.left;
+
+    setTimeout(function () {
+      layer.close(layer._indexTemp['selectInTable']);
+      if (titleElem.css({backgroundColor: 'transparent'}).parent().hasClass('layui-form-selectup')) {
+        topTemp = topTemp - dlElem.outerHeight() - titleElem.outerHeight() - 8;
+      }
+      layer._indexTemp['selectInTable'] = layer.open({
+        type: 1,
+        title: false,
+        closeBtn: 0,
+        shade: 0,
+        anim: -1,
+        fixed: false,
+        isOutAnim: false,
+        offset: [topTemp+'px', leftTemp+'px'],
+        area: [dlElem.outerWidth() + 'px', dlElem.outerHeight() + 'px'],
+        content: '<div class="layui-unselect layui-form-select layui-form-selected layui-table-select"></div>',
+        success: function (layero, index) {
+          dlElem.appendTo(layero.find('.layui-layer-content').css({overflow: 'hidden'}).find('.layui-form-selected'));
+          layero.find('dl dd').click(function () {
+            layer.close(index);
+          });
+        },
+        end: function () {
+          dlElem.insertAfter(titleElem);
+        }
+      });
+    }, 100);
+  });
+
+  // 点击document的时候如果不是下拉内部的就关掉该下拉框的弹窗
+  $(document).on('table.select.dl.hide', function (event, elem) {
+    if ($(elem).closest('.layui-form-select').length) {
+      return;
+    }
+    layer.close(layer._indexTemp['selectInTable']);
+  });
+
+  // 点击document的时候触发
+  $(document).on('click', function (event) {
+    $(document).trigger('table.select.dl.hide', this.activeElement);
+  });
+
+  // 窗口resize的时候关掉表格中的下拉
+  $(window).on('resize', function (event) {
+    $(document).trigger('table.select.dl.hide', this.activeElement);
+  });
+
+
   $.extend(tablePlug, {
     CHECK_TYPE_ADDITIONAL: CHECK_TYPE_ADDITIONAL
     , CHECK_TYPE_REMOVED: CHECK_TYPE_REMOVED
@@ -1210,6 +1312,7 @@ layui.define(['table'], function (exports) {
         }
       }
     }
+    // getPosition: getPosition
   });
 
   //外部接口
