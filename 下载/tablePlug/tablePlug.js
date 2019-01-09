@@ -1253,7 +1253,8 @@ layui.define(['table'], function (exports) {
 
   // 点击document的时候如果不是下拉内部的就关掉该下拉框的弹窗
   $(document).on('table.select.dl.hide', function (event, elem) {
-    if ($(elem).closest('.layui-form-select').length) {
+    // 只有在layui的table内部的选项的点击才需要阻止layer关闭
+    if ($(elem).closest('.layui-form-select').length && $(elem).closest('.layui-table-view').length) {
       return;
     }
     layer.close(layer._indexTemp['selectInTable']);
@@ -1267,6 +1268,11 @@ layui.define(['table'], function (exports) {
   // 窗口resize的时候关掉表格中的下拉
   $(window).on('resize', function (event) {
     $(document).trigger('table.select.dl.hide', this.activeElement);
+  });
+
+  // 阻止表格中lay-event的事件冒泡
+  $(document).on('click', '.layui-table-view tbody [lay-event], .layui-table-view tbody tr [name="layTableCheckbox"]+', function (event) {
+    layui.stope(event);
   });
 
 

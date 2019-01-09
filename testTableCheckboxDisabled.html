@@ -98,7 +98,7 @@
         return function (data) {
           // return data[field];
           return [
-            '<select onchange="changeFn(this)">',
+            '<select>',
             '<option value="1" >北京</option>',
             '<option value="11" >天津</option>',
             '<option value="2" >上海</option>',
@@ -108,10 +108,6 @@
             '</select>'
           ].join('');
         };
-      };
-
-      window.changeFn = function (elem) {
-        $(elem).attr('lay-event', 'hello').click().attr('lay-event', null);
       };
 
       var laytpl = layui.laytpl;
@@ -302,9 +298,10 @@
         var tableView = elemTemp.closest('.layui-table-view');
         var trIndex = elemTemp.data('index');
         tableView.find('tr[data-index="' + trIndex + '"]').find('[name="layTableCheckbox"]+').last().click();
-      }).on('click', '.layui-table-view tbody tr [name="layTableCheckbox"]+', function (event) {
-        layui.stope(event);
-      });
+      })
+      //   .on('click', '.layui-table-view tbody tr [name="layTableCheckbox"]+', function (event) {
+      //   layui.stope(event);
+      // });
     });
 </script>
 </body>
