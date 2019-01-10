@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport"
+        content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+  <title>layui在线调试</title>
+  <link rel="stylesheet" href="layui/src/css/layui.css" media="all">
+  <style>
+
+  </style>
+</head>
+<body>
+
+<div class="layui-form select_option_in_layer" style="padding: 20px;">
+  <select>
+  <option value="1">北京</option>
+  <option value="2">上海</option>
+  <option value="3">广州</option>
+  <option value="4">深圳</option>
+</select>
+</div>
+
+<button class="layui-btn" id="btn1">点击继续弹出</button>
+
+
+<script src="layui/src/layui.js"></script>
+<script>
+
+  layui.config({base: 'test/js/'})
+    .use(['testTablePlug'], function () {
+      var $ = layui.$;
+      $('#btn1').click(function () {
+        layer.open({
+          type: 2,
+          title: '测试下拉效果iframe',
+          shade: false,
+          area: ['200px', '100px'],
+          content: 'testIframe.html',
+          success: function (layero, index) {
+          }
+        });
+      })
+    });
+</script>
+</body>
+</html>

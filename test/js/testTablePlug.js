@@ -75,6 +75,28 @@ layui.config({base: 'layui/plug/'})
       var tableId = config.id;
       // var tableView = config.elem.next();
       switch (obj.event) {
+        case 'openSelect':
+          layer.open({
+            type: 1,
+            title: '测试下拉效果单页面',
+            area: ['300px', '160px'],
+            content: '<div class="layui-form" style="padding: 20px;"><select><option value="1">北京</option><option value="2">上海</option><option value="3">广州</option><option value="4">深圳</option></select></div>',
+            success: function (layero, index) {
+              form.render();
+            }
+          });
+          break;
+        case 'openIframeSelect':
+          layer.open({
+            type: 2,
+            title: '测试下拉效果iframe',
+            shade: false,
+            area: ['300px', '160px'],
+            content: 'testIframe.html',
+            success: function (layero, index) {
+            }
+          });
+          break;
         case 'LAYTABLE_EXPORT':
           $(this).find('.layui-table-tool-panel li').unbind('click').click(function () {
             // 干掉了原始的事件了，自己定义需要的

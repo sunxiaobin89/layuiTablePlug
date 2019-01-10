@@ -232,10 +232,20 @@ layui.define(['table'], function (exports) {
     }
   });
 
-  function getPosition(elem) {
+  function getPosition(elem, _window) {
+    _window = _window || window;
+    var $ = _window ? _window.layui.$ : layui.$;
+    var offsetTemp = {};
+    if (parent !== window) {
+      if (!parent.layui.tablePlug) {
+        console.log('该功能必须依赖tablePlug请先引入');
+      } else {
+        offsetTemp = parent.layui.tablePlug.getPosition($(window.frames.frameElement), parent);
+      }
+    }
     return {
-      top: elem.offset().top - $('body').offset().top - $(document).scrollTop(),
-      left: elem.offset().left - $('body').offset().left - $(document).scrollLeft()
+      top: (offsetTemp.top || 0) + elem.offset().top - $('body').offset().top - $(document).scrollTop(),
+      left: (offsetTemp.left || 0) + elem.offset().left - $('body').offset().left - $(document).scrollLeft()
     }
   }
 
@@ -1213,9 +1223,15 @@ layui.define(['table'], function (exports) {
 
   // 记录弹窗的index的变量
   layer._indexTemp = layer._indexTemp || {};
-  $(document).on('click', '.layui-table-view .layui-select-title', function (event) {
+  $(document).on('click'
+    , '.layui-table-view .layui-select-title, .layui-layer-content .layui-select-title, .select_option_in_layer .layui-select-title'
+    , function (event) {
     layui.stope(event);
+    top.layer.close(top.layer._indexTemp['selectInTable']);
     var titleElem = $(this);
+    if (!titleElem.parent().hasClass('layui-form-selected')) {
+      return;
+    }
     var dlElem = titleElem.next();
 
     var titleElemPosition = getPosition(titleElem);
@@ -1223,28 +1239,31 @@ layui.define(['table'], function (exports) {
     var leftTemp = titleElemPosition.left;
 
     setTimeout(function () {
-      layer.close(layer._indexTemp['selectInTable']);
+
       if (titleElem.css({backgroundColor: 'transparent'}).parent().hasClass('layui-form-selectup')) {
         topTemp = topTemp - dlElem.outerHeight() - titleElem.outerHeight() - 8;
       }
-      layer._indexTemp['selectInTable'] = layer.open({
+      top.layer._indexTemp['selectInTable'] = top.layer.open({
         type: 1,
         title: false,
         closeBtn: 0,
         shade: 0,
         anim: -1,
-        fixed: false,
+        fixed: top !== window,
         isOutAnim: false,
-        offset: [topTemp+'px', leftTemp+'px'],
-        area: [dlElem.outerWidth() + 'px', dlElem.outerHeight() + 'px'],
+        offset: [topTemp + 'px', leftTemp + 'px'],
+        // area: [dlElem.outerWidth() + 'px', dlElem.outerHeight() + 'px'],
+        area: dlElem.outerWidth() + 'px',
         content: '<div class="layui-unselect layui-form-select layui-form-selected layui-table-select"></div>',
         success: function (layero, index) {
           dlElem.appendTo(layero.find('.layui-layer-content').css({overflow: 'hidden'}).find('.layui-form-selected'));
+          layero.width(titleElem.width());
           layero.find('dl dd').click(function () {
             layer.close(index);
           });
         },
         end: function () {
+          titleElem.parent().removeClass('layui-form-selected');
           dlElem.insertAfter(titleElem);
         }
       });
@@ -1257,7 +1276,7 @@ layui.define(['table'], function (exports) {
     if ($(elem).closest('.layui-form-select').length && $(elem).closest('.layui-table-view').length) {
       return;
     }
-    layer.close(layer._indexTemp['selectInTable']);
+    top.layer.close(top.layer._indexTemp['selectInTable']);
   });
 
   // 点击document的时候触发
@@ -1273,6 +1292,14 @@ layui.define(['table'], function (exports) {
   // 阻止表格中lay-event的事件冒泡
   $(document).on('click', '.layui-table-view tbody [lay-event], .layui-table-view tbody tr [name="layTableCheckbox"]+', function (event) {
     layui.stope(event);
+  });
+
+  // 监听滚动在必要的时候关掉select的选项弹出（主要是在多级的父子页面的时候）
+  $(document).scroll(function () {
+    if (top !== window && parent.parent) {
+      // 多级嵌套的窗口就直接关掉了
+      top.layer.close(top.layer._indexTemp['selectInTable'])
+    }
   });
 
 
@@ -1317,8 +1344,8 @@ layui.define(['table'], function (exports) {
           });
         }
       }
-    }
-    // getPosition: getPosition
+    },
+    getPosition: getPosition
   });
 
   //外部接口
