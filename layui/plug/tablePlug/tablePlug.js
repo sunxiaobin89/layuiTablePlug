@@ -1222,11 +1222,13 @@ layui.define(['table'], function (exports) {
   });
 
   // 记录弹窗的index的变量
-  layer._indexTemp = layer._indexTemp || {};
+  top.layer._indexTemp = top.layer._indexTemp || {};
+  // 优化select的选项在某些场景下的显示问题
   $(document).on('click'
     , '.layui-table-view .layui-select-title, .layui-layer-content .layui-select-title, .select_option_in_layer .layui-select-title'
     , function (event) {
     layui.stope(event);
+    // return;
     top.layer.close(top.layer._indexTemp['selectInTable']);
     var titleElem = $(this);
     if (!titleElem.parent().hasClass('layui-form-selected')) {
@@ -1259,7 +1261,7 @@ layui.define(['table'], function (exports) {
           dlElem.appendTo(layero.find('.layui-layer-content').css({overflow: 'hidden'}).find('.layui-form-selected'));
           layero.width(titleElem.width());
           layero.find('dl dd').click(function () {
-            layer.close(index);
+            top.layer.close(index);
           });
         },
         end: function () {

@@ -57,10 +57,6 @@
   display: none;
 }
 
-.layui-table-view .layui-form-select dl {
-  /*visibility: hidden !important;*/
-}
-
 .layui-layer-content .layui-table-select  dl {
   position: relative;
 }

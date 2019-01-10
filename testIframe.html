@@ -13,7 +13,7 @@
 <body>
 
 <div class="layui-form select_option_in_layer" style="padding: 20px;">
-  <select>
+  <select lay-filter="city">
   <option value="1">北京</option>
   <option value="2">上海</option>
   <option value="3">广州</option>
@@ -30,6 +30,7 @@
   layui.config({base: 'test/js/'})
     .use(['testTablePlug'], function () {
       var $ = layui.$;
+      var form = layui.form;
       $('#btn1').click(function () {
         layer.open({
           type: 2,
@@ -40,6 +41,9 @@
           success: function (layero, index) {
           }
         });
+      })
+      form.on('select(city)', function (data) {
+        console.log('选择了', data);
       })
     });
 </script>
