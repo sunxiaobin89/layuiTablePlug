@@ -73,14 +73,3 @@ page的多语言设置、处理工具列宽度如果不够显示点击显示更�
 还是不够灵活，限定太多，没办法extend一样的用tablePlug.min.js，so，不走config extend的逻辑，个人建议直接把tablePlug这个
 文件夹放在lib/extend下然后再index.js里面写extend然后作为index的依赖模块。
 
-
-
-
-#### 码云特技
-
-1. 使用 Readme\_XXX.md 来支持不同的语言，例如 Readme\_en.md, Readme\_zh.md
-2. 码云官方博客 [blog.gitee.com](https://blog.gitee.com)
-3. 你可以 [https://gitee.com/explore](https://gitee.com/explore) 这个地址来了解码云上的优秀开源项目
-4. [GVP](https://gitee.com/gvp) 全称是码云最有价值开源项目，是码云综合评定出的优秀开源项目
-5. 码云官方提供的使用手册 [https://gitee.com/help](https://gitee.com/help)
-6. 码云封面人物是一档用来展示码云会员风采的栏目 [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
